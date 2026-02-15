@@ -96,7 +96,7 @@ class Config:
         self.workoutfile = "test_data/sample_workout.json"  # Sample workout JSON file
 
         # Export settings
-        self.export_dir = Path("your_data")
+        self.export_dir = Path("../your_data")
         self.export_dir.mkdir(exist_ok=True)
 
 
