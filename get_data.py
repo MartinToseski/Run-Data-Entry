@@ -41,16 +41,26 @@ from example import init_api
 logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
 
 
+""" Helper function to get today's date """
 def get_today_date():
     today_date = date.today()
     return today_date
 
 
+""" Helper function to get last Monday's date before today's date """
 def get_last_monday():
     last_monday_date = get_today_date() - relativedelta(weekday=MO(-1))
     return last_monday_date
 
 
+""" Extract run-focused daily (morning) statistics 
+date -> today's date
+training_status -> message explaining the current training status (e.g. MAINTAINING_6)
+last_night_HRV -> average HRV recorded during last night's sleep (= heart rate variability)
+last_night_sleep_score -> score for recorded sleep (from 1 to 100)
+last_night_RHR -> average RHR recorded during last night's sleep (= resting heart rate)
+total_week_km -> number of kilometers ran this week (from last Monday to today)
+"""
 def extract_daily_stats(api: Garmin):
     """Display today's summary statistics."""
     today = get_today_date().isoformat()
@@ -66,6 +76,15 @@ def extract_daily_stats(api: Garmin):
     }
 
 
+""" Extract statistics about today's run 
+run_today_boolean -> whether a run commenced today (True/False)
+run_today_distance_km -> distance ran today
+run_today_duration_min -> duration of today's run rounded to minutes 
+run_today_training_load -> calculated training load of run (sum of all training loads from the runs that day)
+*run_today_aerobic_effect -> calculated aerobic effect of run 
+*run_today_aerobic_effect -> calculated anaerobic effect of run 
+* -> weighted by load (sum of effect*training load) / total training load 
+"""
 def extract_today_run(api: Garmin):
     """Display today's activity statistics."""
     today = get_today_date().isoformat()
@@ -78,6 +97,7 @@ def extract_today_run(api: Garmin):
             "run_today_boolean": False,
             "run_today_distance_km": 0,
             "run_today_duration_min": 0,
+            "run_today_training_load": 0,
             "run_today_aerobic_effect": 0,
             "run_today_anaerobic_effect": 0
         }
