@@ -32,7 +32,7 @@ The provided example.py was used as a starting point to build upon.
 """
 
 import logging
-from datetime import date
+from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta, MO
 from garminconnect import Garmin
 from example import init_api
@@ -67,24 +67,31 @@ def get_weekday_name(date_curr):
     return days_of_the_week[date_curr.weekday()]
 
 
+""" Helper function to get a sum of some statistic in a list of runs """
+def get_total_run_statistic(run_activities, stat):
+    today = get_today_date().isoformat()
+    return sum([run[stat] for run in run_activities])
+
+
+""" Helper function to get the date of Monday four weeks ago  """
+def get_monday_four_weeks_ago():
+    last_monday = get_last_monday()
+    monday_four_weeks_ago = last_monday - timedelta(days=28)
+    return monday_four_weeks_ago
+
+
 """ Helper function to retain all run type activities from a list of activities """
 def keep_only_runs(activity_list):
     return [activity for activity in activity_list if activity["activityType"]["parentTypeId"] == 1]
 
 
-""" Helper function to get a sum of some statistic in a list of runs """
-def get_total_run_statistic(api: Garmin, run_activities, stat):
-    today = get_today_date().isoformat()
-    return sum([api.get_activities_by_date(today)[i][stat] for i in range(0, len(run_activities))])
-
-
 """ Helper function to calculate the weighted training effect for a list of runs
 effect -> aerobicTrainingEffect / anaerobicTrainingEffect
 """
-def calculate_weighted_training_effect(api: Garmin, run_activities, effect):
+def calculate_weighted_training_effect(run_activities, effect):
     today = get_today_date().isoformat()
-    total_training_load = get_total_run_statistic(api, run_activities, "activityTrainingLoad")
-    return sum([api.get_activities_by_date(today)[i][effect]*api.get_activities_by_date(today)[i]["activityTrainingLoad"] for i in range(0, len(run_activities))]) / total_training_load
+    total_training_load = get_total_run_statistic(run_activities, "activityTrainingLoad")
+    return sum([run[effect]*run["activityTrainingLoad"] for run in run_activities]) / total_training_load
 
 
 
@@ -121,7 +128,7 @@ run_today_training_load -> calculated training load of run (sum of all training 
 *run_today_aerobic_effect -> calculated anaerobic effect of run 
 * -> weighted by load (sum of effect*training load) / total training load 
 """
-def extract_today_run(api: Garmin):
+def extract_today_run_stats(api: Garmin):
     """Display today's activity statistics."""
     today = get_today_date().isoformat()
 
@@ -140,11 +147,11 @@ def extract_today_run(api: Garmin):
 
     return {
         "run_today_boolean": True,
-        "run_today_distance_km": get_total_run_statistic(api, today_runs, "distance") / 1000,
-        "run_today_duration_min": round((get_total_run_statistic(api, today_runs, "duration")) / 60),
-        "run_today_training_load": round(get_total_run_statistic(api, today_runs, "activityTrainingLoad")),
-        "run_today_aerobic_effect": round(calculate_weighted_training_effect(api, today_runs, "aerobicTrainingEffect"), 1),
-        "run_today_anaerobic_effect": round(calculate_weighted_training_effect(api, today_runs, "anaerobicTrainingEffect"), 1),
+        "run_today_distance_km": get_total_run_statistic(today_runs, "distance") / 1000,
+        "run_today_duration_min": round((get_total_run_statistic(today_runs, "duration")) / 60),
+        "run_today_training_load": round(get_total_run_statistic(today_runs, "activityTrainingLoad")),
+        "run_today_aerobic_effect": round(calculate_weighted_training_effect(today_runs, "aerobicTrainingEffect"), 1),
+        "run_today_anaerobic_effect": round(calculate_weighted_training_effect(today_runs, "anaerobicTrainingEffect"), 1),
     }
 
 
@@ -162,7 +169,7 @@ def main():
 
     # Display today's run statistics
     print("Today's Run Stats:")
-    print(extract_today_run(api))
+    print(extract_today_run_stats(api))
 
 
 if __name__ == "__main__":
