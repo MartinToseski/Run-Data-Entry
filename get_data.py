@@ -53,6 +53,11 @@ def get_last_monday():
     return last_monday_date
 
 
+""" Helper function to retain all run type activities from a list of activities """
+def keep_only_runs(activity_list):
+    return [activity for activity in activity_list if activity["activityType"]["parentTypeId"] == 1]
+
+
 """ Extract run-focused daily (morning) statistics 
 date -> today's date
 training_status -> message explaining the current training status (e.g. MAINTAINING_6)
@@ -90,7 +95,7 @@ def extract_today_run(api: Garmin):
     today = get_today_date().isoformat()
 
     today_activities = api.get_activities_by_date(today)
-    today_runs = [activity for activity in today_activities if activity["activityType"]["parentTypeId"] == 1]
+    today_runs = keep_only_runs(today_activities)
 
     if len(today_runs) == 0:
         return {
