@@ -155,6 +155,27 @@ def extract_today_run_stats(api: Garmin):
     }
 
 
+""" Extract statistics about last 4 weeks
+last_four_weeks_average_km -> average weekly kilometers ran
+last_four_weeks_average_sleep_score -> average sleep score
+last_four_weeks_average_HRV -> average HRV measured
+last_four_weeks_average_RHR -> average RHR measured
+* the 4 weeks are always calculated from Monday to Sunday no matter the current day of the week
+"""
+def extract_last_four_weeks_stats(api: Garmin):
+    start_date = get_monday_four_weeks_ago()
+    end_date = get_last_monday() - timedelta(days=1)
+    last_four_weeks_runs = api.get_activities_by_date(startdate=start_date.isoformat(), enddate=end_date.isoformat(), sortorder="asc")
+    last_four_weeks_runs = keep_only_runs(last_four_weeks_runs)
+
+    return {
+        "last_four_weeks_average_km": round((sum([run["distance"]/1000 for run in last_four_weeks_runs]) / 4), 1),
+        "last_four_weeks_average_sleep_score": round(sum([api.get_sleep_data((start_date+timedelta(days=i)).isoformat())["dailySleepDTO"]["sleepScores"]["overall"]["value"] for i in range(28)]) / 28),
+        "last_four_weeks_average_HRV": round(sum([api.get_hrv_data((start_date + timedelta(days=i)).isoformat())["dailySleepDTO"]["sleepScores"]["overall"]["value"] for i in range(28)]) / 28),
+        "last_four_weeks_average_RHR": round(sum([api.get_hrv_data((start_date + timedelta(days=i)).isoformat())["hrvSummary"]["lastNightAvg"] for i in range(28)]) / 28),
+    }
+
+
 def main():
     """Main example demonstrating basic Garmin Connect API usage."""
     # Initialize API with authentication (will only prompt for credentials if needed)
@@ -169,7 +190,11 @@ def main():
 
     # Display today's run statistics
     print("Today's Run Stats:")
-    print(extract_today_run_stats(api))
+    print(extract_today_run_stats(api), "\n")
+
+    # Display last 4 weeks average statistics
+    print("Last 4 Weeks Stats:")
+    print(extract_last_four_weeks_stats(api))
 
 
 if __name__ == "__main__":
