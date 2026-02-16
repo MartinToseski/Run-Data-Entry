@@ -142,16 +142,18 @@ def extract_today_run_stats(api: Garmin):
             "run_today_duration_min": 0,
             "run_today_training_load": 0,
             "run_today_aerobic_effect": 0,
-            "run_today_anaerobic_effect": 0
+            "run_today_anaerobic_effect": 0,
+            "tun_today_start_time": "00:00:00"
         }
 
     return {
         "run_today_boolean": True,
         "run_today_distance_km": get_total_run_statistic(today_runs, "distance") / 1000,
+        "run_today_start_time": min([run["startTimeLocal"].split(' ')[1] for run in today_runs]),
         "run_today_duration_min": round((get_total_run_statistic(today_runs, "duration")) / 60),
         "run_today_training_load": round(get_total_run_statistic(today_runs, "activityTrainingLoad")),
         "run_today_aerobic_effect": round(calculate_weighted_training_effect(today_runs, "aerobicTrainingEffect"), 1),
-        "run_today_anaerobic_effect": round(calculate_weighted_training_effect(today_runs, "anaerobicTrainingEffect"), 1),
+        "run_today_anaerobic_effect": round(calculate_weighted_training_effect(today_runs, "anaerobicTrainingEffect"), 1)
     }
 
 
@@ -166,7 +168,7 @@ def extract_last_four_weeks_stats(api: Garmin):
     start_date = get_monday_four_weeks_ago()
     end_date = get_last_monday() - timedelta(days=1)
     last_four_weeks_runs = api.get_activities_by_date(startdate=start_date.isoformat(), enddate=end_date.isoformat(), sortorder="asc")
-    #last_four_weeks_runs = keep_only_runs(last_four_weeks_runs)
+    last_four_weeks_runs = keep_only_runs(last_four_weeks_runs)
 
     return {
         "last_four_weeks_average_km": round((sum([run["distance"]/1000 for run in last_four_weeks_runs]) / 4), 1),
