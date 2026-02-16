@@ -32,26 +32,10 @@ The provided example.py was used as a starting point to build upon.
 """
 
 import logging
-import os
-import sys
-import requests
-
-from datetime import date, timedelta
-from getpass import getpass
-from pathlib import Path
-
+from datetime import date
 from dateutil.relativedelta import relativedelta, MO
-from garth.exc import GarthException, GarthHTTPError
-
-from garminconnect import (
-    Garmin,
-    GarminConnectAuthenticationError,
-    GarminConnectConnectionError,
-    GarminConnectTooManyRequestsError,
-)
-from tomlkit.items import String
+from garminconnect import Garmin
 from example import init_api
-
 
 # Suppress garminconnect library logging to avoid tracebacks in normal operation
 logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
