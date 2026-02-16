@@ -40,6 +40,15 @@ from example import init_api
 # Suppress garminconnect library logging to avoid tracebacks in normal operation
 logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
 
+days_of_the_week = {
+    0: "Monday",
+    1: "Tuesday",
+    2: "Wednesday",
+    3: "Thursday",
+    4: "Friday",
+    5: "Saturday",
+    6: "Sunday",
+}
 
 """ Helper function to get today's date """
 def get_today_date():
@@ -51,6 +60,11 @@ def get_today_date():
 def get_last_monday():
     last_monday_date = get_today_date() - relativedelta(weekday=MO(-1))
     return last_monday_date
+
+
+""" Helper function to get the name of the weekday from the date provided """
+def get_weekday_name(date_curr):
+    return days_of_the_week[date_curr.weekday()]
 
 
 """ Helper function to retain all run type activities from a list of activities """
@@ -89,6 +103,7 @@ def extract_daily_stats(api: Garmin):
 
     return {
         "date": today,
+        "day_of_the_week": get_weekday_name(get_today_date()),
         "training_status": api.get_training_status(today)["mostRecentTrainingStatus"]["latestTrainingStatusData"]["3601168031"]["trainingStatusFeedbackPhrase"],
         "last_night_HRV": api.get_hrv_data(today)["hrvSummary"]["lastNightAvg"],
         "last_night_sleep_score": api.get_sleep_data(today)["dailySleepDTO"]["sleepScores"]["overall"]["value"],
