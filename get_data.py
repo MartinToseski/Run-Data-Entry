@@ -166,13 +166,13 @@ def extract_last_four_weeks_stats(api: Garmin):
     start_date = get_monday_four_weeks_ago()
     end_date = get_last_monday() - timedelta(days=1)
     last_four_weeks_runs = api.get_activities_by_date(startdate=start_date.isoformat(), enddate=end_date.isoformat(), sortorder="asc")
-    last_four_weeks_runs = keep_only_runs(last_four_weeks_runs)
+    #last_four_weeks_runs = keep_only_runs(last_four_weeks_runs)
 
     return {
         "last_four_weeks_average_km": round((sum([run["distance"]/1000 for run in last_four_weeks_runs]) / 4), 1),
         "last_four_weeks_average_sleep_score": round(sum([api.get_sleep_data((start_date+timedelta(days=i)).isoformat())["dailySleepDTO"]["sleepScores"]["overall"]["value"] for i in range(28)]) / 28),
-        "last_four_weeks_average_HRV": round(sum([api.get_hrv_data((start_date + timedelta(days=i)).isoformat())["dailySleepDTO"]["sleepScores"]["overall"]["value"] for i in range(28)]) / 28),
-        "last_four_weeks_average_RHR": round(sum([api.get_hrv_data((start_date + timedelta(days=i)).isoformat())["hrvSummary"]["lastNightAvg"] for i in range(28)]) / 28),
+        "last_four_weeks_average_HRV": round(sum([api.get_hrv_data((start_date+timedelta(days=i)).isoformat())["hrvSummary"]["lastNightAvg"] for i in range(28)]) / 28),
+        "last_four_weeks_average_RHR": round(sum([api.get_rhr_day((start_date+timedelta(days=i)).isoformat())["allMetrics"]["metricsMap"]["WELLNESS_RESTING_HEART_RATE"][0]["value"] for i in range(28)]) / 28)
     }
 
 
