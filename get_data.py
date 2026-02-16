@@ -58,6 +58,22 @@ def keep_only_runs(activity_list):
     return [activity for activity in activity_list if activity["activityType"]["parentTypeId"] == 1]
 
 
+""" Helper function to get a sum of some statistic in a list of runs """
+def get_total_run_statistic(api: Garmin, run_activities, stat):
+    today = get_today_date().isoformat()
+    return sum([api.get_activities_by_date(today)[i][stat] for i in range(0, len(run_activities))])
+
+
+""" Helper function to calculate the weighted training effect for a list of runs
+effect -> aerobicTrainingEffect / anaerobicTrainingEffect
+"""
+def calculate_weighted_training_effect(api: Garmin, run_activities, effect):
+    today = get_today_date().isoformat()
+    total_training_load = get_total_run_statistic(api, run_activities, "activityTrainingLoad")
+    return sum([api.get_activities_by_date(today)[i][effect]*api.get_activities_by_date(today)[i]["activityTrainingLoad"] for i in range(0, len(run_activities))]) / total_training_load
+
+
+
 """ Extract run-focused daily (morning) statistics 
 date -> today's date
 training_status -> message explaining the current training status (e.g. MAINTAINING_6)
@@ -107,15 +123,13 @@ def extract_today_run(api: Garmin):
             "run_today_anaerobic_effect": 0
         }
 
-    total_training_load = sum([api.get_activities_by_date(today)[i]["activityTrainingLoad"] for i in range(0, len(today_runs))])
-
     return {
         "run_today_boolean": True,
-        "run_today_distance_km": sum([api.get_activities_by_date(today)[i]["distance"] for i in range(0, len(today_runs))]) / 1000,
-        "run_today_duration_min": round(sum([api.get_activities_by_date(today)[i]["duration"] for i in range(0, len(today_runs))]) / 60),
-        "run_today_training_load": round(total_training_load),
-        "run_today_aerobic_effect": round(sum([api.get_activities_by_date(today)[i]["aerobicTrainingEffect"]*api.get_activities_by_date(today)[i]["activityTrainingLoad"] for i in range(0, len(today_runs))]) / total_training_load, 1),
-        "run_today_anaerobic_effect": round(sum([api.get_activities_by_date(today)[i]["anaerobicTrainingEffect"]*api.get_activities_by_date(today)[i]["activityTrainingLoad"] for i in range(0, len(today_runs))]) / total_training_load, 1),
+        "run_today_distance_km": get_total_run_statistic(api, today_runs, "distance") / 1000,
+        "run_today_duration_min": round((get_total_run_statistic(api, today_runs, "duration")) / 60),
+        "run_today_training_load": round(get_total_run_statistic(api, today_runs, "activityTrainingLoad")),
+        "run_today_aerobic_effect": round(calculate_weighted_training_effect(api, today_runs, "aerobicTrainingEffect"), 1),
+        "run_today_anaerobic_effect": round(calculate_weighted_training_effect(api, today_runs, "anaerobicTrainingEffect"), 1),
     }
 
 
