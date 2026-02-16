@@ -36,9 +36,11 @@ import os
 import sys
 import requests
 
-from datetime import date
+from datetime import date, timedelta
 from getpass import getpass
 from pathlib import Path
+
+from dateutil.relativedelta import relativedelta, MO
 from garth.exc import GarthException, GarthHTTPError
 
 from garminconnect import (
@@ -47,7 +49,7 @@ from garminconnect import (
     GarminConnectConnectionError,
     GarminConnectTooManyRequestsError,
 )
-
+from tomlkit.items import String
 from example import init_api
 
 
@@ -55,16 +57,56 @@ from example import init_api
 logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
 
 
-def extract_stats(api: Garmin):
-    """Display today's activity statistics with proper error handling."""
-    today = date.today().isoformat()
+def get_today_date():
+    today_date = date.today()
+    return today_date
+
+
+def get_last_monday():
+    last_monday_date = get_today_date() - relativedelta(weekday=MO(-1))
+    return last_monday_date
+
+
+def extract_daily_stats(api: Garmin):
+    """Display today's summary statistics."""
+    today = get_today_date().isoformat()
+    last_monday = get_last_monday().isoformat()
 
     return {
         "date": today,
         "training_status": api.get_training_status(today)["mostRecentTrainingStatus"]["latestTrainingStatusData"]["3601168031"]["trainingStatusFeedbackPhrase"],
         "last_night_HRV": api.get_hrv_data(today)["hrvSummary"]["lastNightAvg"],
         "last_night_sleep_score": api.get_sleep_data(today)["dailySleepDTO"]["sleepScores"]["overall"]["value"],
-        "last_night_RHR": api.get_rhr_day(today)["allMetrics"]["metricsMap"]["WELLNESS_RESTING_HEART_RATE"][0]["value"]
+        "last_night_RHR": api.get_rhr_day(today)["allMetrics"]["metricsMap"]["WELLNESS_RESTING_HEART_RATE"][0]["value"],
+        "total_week_km": api.get_activities_by_date(last_monday, today)[0]["distance"] / 1000
+    }
+
+
+def extract_today_run(api: Garmin):
+    """Display today's activity statistics."""
+    today = get_today_date().isoformat()
+
+    today_activities = api.get_activities_by_date(today)
+    today_runs = [activity for activity in today_activities if activity["activityType"]["parentTypeId"] == 1]
+
+    if len(today_runs) == 0:
+        return {
+            "run_today_boolean": False,
+            "run_today_distance_km": 0,
+            "run_today_duration_min": 0,
+            "run_today_aerobic_effect": 0,
+            "run_today_anaerobic_effect": 0
+        }
+
+    total_training_load = sum([api.get_activities_by_date(today)[i]["activityTrainingLoad"] for i in range(0, len(today_runs))])
+
+    return {
+        "run_today_boolean": True,
+        "run_today_distance_km": sum([api.get_activities_by_date(today)[i]["distance"] for i in range(0, len(today_runs))]) / 1000,
+        "run_today_duration_min": round(sum([api.get_activities_by_date(today)[i]["duration"] for i in range(0, len(today_runs))]) / 60),
+        "run_today_training_load": round(total_training_load),
+        "run_today_aerobic_effect": round(sum([api.get_activities_by_date(today)[i]["aerobicTrainingEffect"]*api.get_activities_by_date(today)[i]["activityTrainingLoad"] for i in range(0, len(today_runs))]) / total_training_load, 1),
+        "run_today_anaerobic_effect": round(sum([api.get_activities_by_date(today)[i]["anaerobicTrainingEffect"]*api.get_activities_by_date(today)[i]["activityTrainingLoad"] for i in range(0, len(today_runs))]) / total_training_load, 1),
     }
 
 
@@ -77,7 +119,12 @@ def main():
         return
 
     # Display daily statistics
-    print(extract_stats(api))
+    print("Daily Stats:")
+    print(extract_daily_stats(api), "\n")
+
+    # Display today's run statistics
+    print("Today's Run Stats:")
+    print(extract_today_run(api))
 
 
 if __name__ == "__main__":
