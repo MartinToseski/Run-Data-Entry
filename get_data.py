@@ -32,6 +32,7 @@ The provided example.py was used as a starting point to build upon.
 """
 
 import logging
+from asyncio.windows_events import NULL
 from datetime import date, timedelta, datetime
 from dateutil.relativedelta import relativedelta, MO
 from garminconnect import Garmin
@@ -167,7 +168,7 @@ last_four_weeks_average_RHR -> average RHR measured
 def extract_last_four_weeks_stats(api: Garmin):
     start_date = get_monday_four_weeks_ago()
     end_date = get_last_monday() - timedelta(days=1)
-    last_four_weeks_runs = api.get_activities_by_date(startdate=start_date.isoformat(), enddate=end_date.isoformat(), sortorder="asc")
+    last_four_weeks_runs = api.get_activities_by_date(startdate=start_date.isoformat(), enddate=end_date.isoformat())
     last_four_weeks_runs = keep_only_runs(last_four_weeks_runs)
 
     return {
@@ -178,8 +179,12 @@ def extract_last_four_weeks_stats(api: Garmin):
     }
 
 
-'''
-
+''' Extract statistics about time since previous sessions
+days_since_last_run -> days since last run recorded - outside, treadmill, indoor, or track run (in the last 4 weeks) 
+days_since_last_gym -> days since last strength (gym) training recorded (in the last 4 weeks)
+days_since_last_quality_session -> days since last run where anaerobic or aerobic training effect was larger than 3 (in the last 4 weeks) 
+last_run_aerobic_effect -> aerobic training effect of last run
+last_run_anaerobic_effect -> anaerobic training effect of last run
 '''
 def extract_since_last_activity_stats(api: Garmin):
     last_monday_four_weeks_ago = get_monday_four_weeks_ago()
@@ -194,9 +199,18 @@ def extract_since_last_activity_stats(api: Garmin):
     last_gym = last_four_weeks_gym[0]
     last_gym_date = datetime.strptime(last_gym["startTimeLocal"].split(' ')[0], "%Y-%m-%d").date()
 
+    last_quality_session = last_run
+    for run in last_four_weeks_run:
+        if run["aerobicTrainingEffect"] >= 3 or run["anaerobicTrainingEffect"] >= 3:
+            last_quality_session = run
+            break
+    last_quality_session_date = datetime.strptime(last_quality_session["startTimeLocal"].split(' ')[0], "%Y-%m-%d").date()
+
+
     return {
         "days_since_last_run": (get_today_date()-last_run_date).days,
         "days_since_last_gym": (get_today_date()-last_gym_date).days,
+        "days_since_last_quality_session": (get_today_date()-last_quality_session_date).days,
         "last_run_aerobic_effect": round(last_run["aerobicTrainingEffect"], 1),
         "last_run_anaerobic_effect": round(last_run["anaerobicTrainingEffect"], 1)
     }
@@ -209,6 +223,14 @@ def main():
 
     if not api:
         return
+
+    """
+    temp = api.get_activities_by_date(startdate=(get_today_date()-timedelta(days=16)).isoformat(), enddate=(get_today_date()-timedelta(days=16)).isoformat())
+    for run in temp:
+        print(run, "\n\n\n")
+
+    pass
+    """
 
     # Display daily statistics
     print("Daily Stats:")
