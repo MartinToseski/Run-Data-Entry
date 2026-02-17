@@ -32,7 +32,7 @@ The provided example.py was used as a starting point to build upon.
 """
 
 import logging
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from dateutil.relativedelta import relativedelta, MO
 from garminconnect import Garmin
 from example import init_api
@@ -82,7 +82,7 @@ def get_monday_four_weeks_ago():
 
 """ Helper function to retain all run type activities from a list of activities """
 def keep_only_runs(activity_list):
-    return [activity for activity in activity_list if activity["activityType"]["parentTypeId"] == 1]
+    return [activity for activity in activity_list if "running" in activity["activityType"]["typeKey"].split('_')]
 
 
 """ Helper function to calculate the weighted training effect for a list of runs
@@ -115,7 +115,7 @@ def extract_daily_stats(api: Garmin):
         "last_night_HRV": api.get_hrv_data(today)["hrvSummary"]["lastNightAvg"],
         "last_night_sleep_score": api.get_sleep_data(today)["dailySleepDTO"]["sleepScores"]["overall"]["value"],
         "last_night_RHR": api.get_rhr_day(today)["allMetrics"]["metricsMap"]["WELLNESS_RESTING_HEART_RATE"][0]["value"],
-        "total_week_km": api.get_activities_by_date(last_monday, today)[0]["distance"] / 1000
+        "total_week_km": round(sum([run["distance"] for run in api.get_activities_by_date(last_monday, today)]) / 1000, 1)
     }
 
 
@@ -148,7 +148,7 @@ def extract_today_run_stats(api: Garmin):
 
     return {
         "run_today_boolean": True,
-        "run_today_distance_km": get_total_run_statistic(today_runs, "distance") / 1000,
+        "run_today_distance_km": round(get_total_run_statistic(today_runs, "distance") / 1000, 2),
         "run_today_start_time": min([run["startTimeLocal"].split(' ')[1] for run in today_runs]),
         "run_today_duration_min": round((get_total_run_statistic(today_runs, "duration")) / 60),
         "run_today_training_load": round(get_total_run_statistic(today_runs, "activityTrainingLoad")),
@@ -178,6 +178,30 @@ def extract_last_four_weeks_stats(api: Garmin):
     }
 
 
+'''
+
+'''
+def extract_since_last_activity_stats(api: Garmin):
+    last_monday_four_weeks_ago = get_monday_four_weeks_ago()
+    yesterday = get_today_date() - timedelta(days=1)
+
+    last_four_weeks_activities = api.get_activities_by_date(last_monday_four_weeks_ago.isoformat(), yesterday.isoformat(), sortorder="desc")
+    last_four_weeks_run = keep_only_runs(last_four_weeks_activities)
+    last_run = last_four_weeks_run[0]
+    last_run_date = datetime.strptime(last_run["startTimeLocal"].split(' ')[0], "%Y-%m-%d").date()
+
+    last_four_weeks_gym = [activity for activity in last_four_weeks_activities if activity["activityName"] == "Strength"]
+    last_gym = last_four_weeks_gym[0]
+    last_gym_date = datetime.strptime(last_gym["startTimeLocal"].split(' ')[0], "%Y-%m-%d").date()
+
+    return {
+        "days_since_last_run": (get_today_date()-last_run_date).days,
+        "days_since_last_gym": (get_today_date()-last_gym_date).days,
+        "last_run_aerobic_effect": round(last_run["aerobicTrainingEffect"], 1),
+        "last_run_anaerobic_effect": round(last_run["anaerobicTrainingEffect"], 1)
+    }
+
+
 def main():
     """Main example demonstrating basic Garmin Connect API usage."""
     # Initialize API with authentication (will only prompt for credentials if needed)
@@ -196,7 +220,11 @@ def main():
 
     # Display last 4 weeks average statistics
     print("Last 4 Weeks Stats:")
-    print(extract_last_four_weeks_stats(api))
+    print(extract_last_four_weeks_stats(api), "\n")
+
+    # Display since last activity statistics
+    print("Time Since Last Activities Stats:")
+    print(extract_since_last_activity_stats(api))
 
 
 if __name__ == "__main__":
