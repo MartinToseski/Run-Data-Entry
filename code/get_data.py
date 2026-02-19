@@ -32,18 +32,30 @@ The provided example.py was used as a starting point to build upon.
 """
 
 import logging
-import statistics
-import geopandas as gpd
+from csv import excel
 from datetime import date, timedelta, datetime
+from typing import Any, Dict, List, Optional
+
+import geopandas as gpd
 from dateutil.relativedelta import relativedelta, MO
 from garminconnect import Garmin
-from example import init_api
 from shapely.geometry import Point
+
+from example import init_api
 
 
 # Suppress garminconnect library logging to avoid tracebacks in normal operation
 logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
-WORLD = gpd.read_file("./data/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp")
+
+# ---------------------------------------------------------------------
+# Global Data
+# ---------------------------------------------------------------------
+try:
+    WORLD = gpd.read_file("./data/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp")
+except Exception as e:
+    print("World shapefile could not be loaded:", e)
+    WORLD = None
+
 DAYS_OF_THE_WEEK = {
     0: "Monday",
     1: "Tuesday",
@@ -54,60 +66,61 @@ DAYS_OF_THE_WEEK = {
     6: "Sunday",
 }
 
-""" Helper function to get today's date """
-def get_today_date():
+
+# ---------------------------------------------------------------------
+# Utility Functions
+# ---------------------------------------------------------------------
+def get_today_date() -> date:
     return date.today()
 
 
-""" Helper function to get last Monday's date before today's date """
-def get_last_monday():
+def get_last_monday() -> date:
     return get_today_date() - relativedelta(weekday=MO(-1))
 
 
-""" Helper function to get the name of the weekday from the date provided """
-def get_weekday_name(date_curr):
-    return DAYS_OF_THE_WEEK[date_curr.weekday()]
-
-
-""" Helper function to get a sum of some statistic in a list of runs """
-def get_total_run_statistic(run_activities, stat):
-    return sum([run[stat] for run in run_activities])
-
-
-""" Helper function to get the date of Monday four weeks ago  """
-def get_monday_four_weeks_ago():
+def get_monday_four_weeks_ago() -> date:
     return get_last_monday() - timedelta(days=28)
 
 
-""" Helper function to retain all run type activities from a list of activities """
-def keep_only_runs(activity_list):
+def get_weekday_name(date_curr) -> str:
+    return DAYS_OF_THE_WEEK[date_curr.weekday()]
+
+
+def get_total_run_statistic(run_activities: List[dict], stat: str) -> float:
+    return sum([run.get(stat, 0) for run in run_activities])
+
+
+def keep_only_runs(activity_list: List[dict]) -> List[dict]:
     return [activity for activity in activity_list if "running" in activity["activityType"]["typeKey"].split('_')]
 
 
-""" Helper function to calculate the weighted training effect for a list of runs
-effect -> aerobicTrainingEffect / anaerobicTrainingEffect
-"""
-def calculate_weighted_training_effect(run_activities, effect):
+def calculate_weighted_training_effect(run_activities: List[dict], effect: str) -> float:
     total_training_load = get_total_run_statistic(run_activities, "activityTrainingLoad")
-    return sum([run[effect]*run["activityTrainingLoad"] for run in run_activities]) / total_training_load
+    if total_training_load == 0:
+        return 0.0
+    return sum([run.get(effect, 0)*run.get("activityTrainingLoad", 0) for run in run_activities]) / total_training_load
 
 
-""" Helper function to extract country information from coordinates """
-def coordinates_to_country(coords):
+def coordinates_to_country(coords: List[tuple]) -> List[str]:
+    if WORLD is None or not coords:
+        return []
+
     country_list = []
     for lat, lon in coords:
-        point = Point(lon, lat)
-        match = WORLD[WORLD.geometry.apply(lambda geom: point.within(geom))]
-        country_list.append(match.iloc[0]["ADMIN"])
+        try:
+            point = Point(lon, lat)
+            match = WORLD[WORLD.geometry.apply(lambda geom: point.within(geom))]
+
+            if not match.empty:
+                country_list.append(match.iloc[0]["ADMIN"])
+        except Exception:
+            continue
+
     return country_list
 
 
-""" Helper function to find whether a trip occured by looking at the log of country list """
-def find_trip(country_list):
-    unique_countries = set(country_list)
-    if len(unique_countries) == 1:
-        return False
-    return True
+def find_trip(country_list: List[str]) -> bool:
+    return len(set(country_list)) > 1
 
 
 """ Extract run-focused daily (morning) statistics 
@@ -158,7 +171,7 @@ def extract_today_run_stats(api: Garmin):
             "run_today_training_load": 0,
             "run_today_aerobic_effect": 0,
             "run_today_anaerobic_effect": 0,
-            "tun_today_start_time": "00:00:00"
+            "run_today_start_time": "00:00:00"
         }
 
     return {
