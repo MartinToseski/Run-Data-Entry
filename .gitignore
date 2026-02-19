@@ -1,6 +1,6 @@
-../.venv/
+.venv/
 .idea/
 __pycache__/
 *.pyc
 your_data/
-demo.py
+demo.p
