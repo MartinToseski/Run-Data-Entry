@@ -41,7 +41,7 @@ from shapely.geometry import Point
 
 # Suppress garminconnect library logging to avoid tracebacks in normal operation
 logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
-WORLD = gpd.read_file("data/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp")
+WORLD = gpd.read_file("./data/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp")
 DAYS_OF_THE_WEEK = {
     0: "Monday",
     1: "Tuesday",
