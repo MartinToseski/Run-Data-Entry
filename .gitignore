@@ -4,4 +4,5 @@ __pycache__/
 *.pyc
 your_data/
 code/demo.py
-code/example.py
+code/pdm.lock
+code/pyproject.toml

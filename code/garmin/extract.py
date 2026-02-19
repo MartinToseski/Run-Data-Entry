@@ -1,132 +1,34 @@
-"""🏃‍♂️ Run Data Entry (Run, Will He?) 🏃‍♂️
-=======================================
-
-This code extracts information about the following parameters:
-- Date
-- Location
-- Week Total Km. Ran
-- Last 4 Weeks Avg. Km. Ran
-- Sleep Score
-- Last 4 Weeks Avg. Sleep Score
-- HRV
-- Last 4 Weeks Avg. HRV
-- RHR
-- Last 4 Weeks Avg. RHR
-- Training Status
-- Last Run Intensity
-- Days Since Last Run
-- Days Since Last Quality Session
-- Days Since Last Strength Training
-- Trip in the Last 2 Weeks?
-- Did I Actually Run Today? + Run Intensity + Time of Run
-
-This data is noted in a .csv file with the goal of using it for later data analysis experimenting / ML projects :)
-
-Initial ideas included:
-- predicting whether a run will commence today
-- analysing best time of the day for me to run (or what time/day I run mostly commonly)
-- explain why I ran/didn't run
-
-!!! Credits: https://github.com/cyberjunky/python-garminconnect/tree/master !!!
-The provided example.py was used as a starting point to build upon.
+"""
+Extraction of daily health metrics and weekly run totals,
+today's run-specific metrics,
+rolling four-weeks averages,
+days since different previous activities,
+and location information
 """
 
-import logging
-from csv import excel
-from datetime import date, timedelta, datetime
-from typing import Any, Dict, List, Optional
-
-import geopandas as gpd
-from dateutil.relativedelta import relativedelta, MO
+from datetime import timedelta, datetime
+from typing import Any, Dict
 from garminconnect import Garmin
-from shapely.geometry import Point
-
-from example import init_api
-
-
-# Suppress garminconnect library logging to avoid tracebacks in normal operation
-logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
-
-# ---------------------------------------------------------------------
-# Global Data
-# ---------------------------------------------------------------------
-try:
-    WORLD = gpd.read_file("./data/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp")
-except Exception as e:
-    print("World shapefile could not be loaded:", e)
-    WORLD = None
-
-DAYS_OF_THE_WEEK = {
-    0: "Monday",
-    1: "Tuesday",
-    2: "Wednesday",
-    3: "Thursday",
-    4: "Friday",
-    5: "Saturday",
-    6: "Sunday",
-}
+from utils import get_today_date, get_last_monday, get_monday_four_weeks_ago, get_weekday_name, get_total_run_statistic, keep_only_runs, calculate_weighted_training_effect
+from geo import coordinates_to_country, find_trip
 
 
 # ---------------------------------------------------------------------
-# Utility Functions
-# ---------------------------------------------------------------------
-def get_today_date() -> date:
-    return date.today()
-
-
-def get_last_monday() -> date:
-    return get_today_date() - relativedelta(weekday=MO(-1))
-
-
-def get_monday_four_weeks_ago() -> date:
-    return get_last_monday() - timedelta(days=28)
-
-
-def get_weekday_name(date_curr) -> str:
-    return DAYS_OF_THE_WEEK[date_curr.weekday()]
-
-
-def get_total_run_statistic(run_activities: List[dict], stat: str) -> float:
-    return sum([run.get(stat, 0) for run in run_activities])
-
-
-def keep_only_runs(activity_list: List[dict]) -> List[dict]:
-    return [activity for activity in activity_list if "running" in activity["activityType"]["typeKey"].split('_')]
-
-
-def calculate_weighted_training_effect(run_activities: List[dict], effect: str) -> float:
-    total_training_load = get_total_run_statistic(run_activities, "activityTrainingLoad")
-    if total_training_load == 0:
-        return 0.0
-    return sum([run.get(effect, 0)*run.get("activityTrainingLoad", 0) for run in run_activities]) / total_training_load
-
-
-def coordinates_to_country(coords: List[tuple]) -> List[str]:
-    if WORLD is None or not coords:
-        return []
-
-    country_list = []
-    for lat, lon in coords:
-        try:
-            point = Point(lon, lat)
-            match = WORLD[WORLD.geometry.apply(lambda geom: point.within(geom))]
-
-            if not match.empty:
-                country_list.append(match.iloc[0]["ADMIN"])
-        except Exception:
-            continue
-
-    return country_list
-
-
-def find_trip(country_list: List[str]) -> bool:
-    return len(set(country_list)) > 1
-
-
-# ---------------------------------------------------------------------
-# Extraction Functions
+# Daily Metrics
 # ---------------------------------------------------------------------
 def extract_daily_stats(api: Garmin) -> Dict[str, Any]:
+    """
+    Extract today's recovery and weekly running metrics.
+    Includes:
+        - Training status
+        - HRV
+        - Sleep score
+        - Resting heart rate
+        - Total kilometers run this week
+    Returns:
+        Dictionary containing daily health and weekly mileage metrics.
+    All fields default to None or 0 if API calls fail.
+    """
     today = get_today_date().isoformat()
     last_monday = get_last_monday().isoformat()
 
@@ -169,7 +71,22 @@ def extract_daily_stats(api: Garmin) -> Dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------
+# Today's Run
+# ---------------------------------------------------------------------
 def extract_today_run_stats(api: Garmin) -> Dict[str, Any]:
+    """
+    Determine whether a run occurred today and extract its metrics.
+    Includes:
+        - Distance
+        - Duration
+        - Training load
+        - Aerobic and anaerobic effect
+        - Start time
+    Returns:
+        Dictionary with run metrics. If no run occurred,
+        values are set to defaults and run_today_boolean is False.
+    """
     today = get_today_date().isoformat()
 
     try:
@@ -200,7 +117,19 @@ def extract_today_run_stats(api: Garmin) -> Dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------
+# Four Week Averages
+# ---------------------------------------------------------------------
 def extract_last_four_weeks_stats(api: Garmin) -> Dict[str, Any]:
+    """
+    Compute rolling four-week averages.
+    Includes:
+        - Average weekly kilometers
+        - Average sleep score
+        - Average HRV
+        - Average resting heart rate
+    The time window spans the four full weeks preceding the current week.
+    """
     start_date = get_monday_four_weeks_ago()
     end_date = get_last_monday() - timedelta(days=1)
 
@@ -219,7 +148,20 @@ def extract_last_four_weeks_stats(api: Garmin) -> Dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------
+# Recency Metrics
+# ---------------------------------------------------------------------
 def extract_since_last_activity_stats(api: Garmin) -> Dict[str, Any]:
+    """
+    Compute recency metrics for key activity types.
+    Includes:
+        - Days since last run
+        - Days since last strength session
+        - Days since last quality session
+        - Aerobic/anaerobic effect of most recent run
+    Returns:
+        Dictionary with recency and intensity indicators.
+    """
     last_monday_four_weeks_ago = get_monday_four_weeks_ago()
     yesterday = get_today_date() - timedelta(days=1)
 
@@ -267,7 +209,17 @@ def extract_since_last_activity_stats(api: Garmin) -> Dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------
+# Location
+# ---------------------------------------------------------------------
 def extract_location_stats(api: Garmin) -> Dict[str, Any]:
+    """
+    Infer location and travel behavior from recent run coordinates.
+    Includes:
+        - Most recent detected country
+        - Boolean indicating travel within last two weeks
+    Uses start coordinates of runs for country detection.
+    """
     today = get_today_date()
     two_weeks_before = get_last_monday() - timedelta(days=14)
 
@@ -299,30 +251,9 @@ def extract_location_stats(api: Garmin) -> Dict[str, Any]:
 
 
 def combine_dictionary_data(api: Garmin) -> Dict[str, Any]:
+    """
+    Aggregate all extraction modules into a single unified dictionary.
+    Serves as the primary interface for downstream persistence
+    (e.g., CSV storage or database insertion).
+    """
     return extract_daily_stats(api) | extract_today_run_stats(api) | extract_last_four_weeks_stats(api) | extract_since_last_activity_stats(api) | extract_location_stats(api)
-
-
-# ---------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------
-def main() -> None:
-    # Initialize API with authentication (will only prompt for credentials if needed)
-    api = init_api()
-
-    if not api:
-        print("Lost api")
-        return
-
-    print("- - - Garmin Data - - -")
-    data = combine_dictionary_data(api)
-
-    print(data)
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("Keyboard Interruption!")
-    except Exception as e:
-        print("Something bad happened!\n", e)
