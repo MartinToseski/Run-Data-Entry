@@ -32,12 +32,14 @@ The provided example.py was used as a starting point to build upon.
 """
 
 import logging
+import statistics
+import geopandas as gpd
 from datetime import date, timedelta, datetime
 from dateutil.relativedelta import relativedelta, MO
 from garminconnect import Garmin
 from example import init_api
-import geopandas as gpd
 from shapely.geometry import Point
+
 
 # Suppress garminconnect library logging to avoid tracebacks in normal operation
 logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
@@ -242,7 +244,16 @@ def extract_location_stats(api: Garmin):
             locations_list.append(loc)
 
     country_list = coordinates_to_country(locations_list)
-    return country_list, find_trip(locations_list)
+    trip_in_the_last_two_weeks = find_trip(country_list)
+
+    return {
+        "location": country_list[0],
+        "trip_in_the_last_two_weeks": trip_in_the_last_two_weeks,
+    }
+
+
+def combine_dictionary_data(api: Garmin):
+    return extract_daily_stats(api) | extract_today_run_stats(api) | extract_last_four_weeks_stats(api) | extract_since_last_activity_stats(api) | extract_location_stats(api)
 
 
 def main():
@@ -254,24 +265,8 @@ def main():
         print("Lost api")
         return
 
-    # Display daily statistics
-    print("Daily Stats:")
-    print(extract_daily_stats(api), "\n")
-
-    # Display today's run statistics
-    print("Today's Run Stats:")
-    print(extract_today_run_stats(api), "\n")
-
-    # Display last 4 weeks average statistics
-    print("Last 4 Weeks Stats:")
-    print(extract_last_four_weeks_stats(api), "\n")
-
-    # Display since last activity statistics
-    print("Time Since Last Activities Stats:")
-    print(extract_since_last_activity_stats(api), "\n")
-
-    print("Last 4 Weeks Location Stats:")
-    print(extract_location_stats(api))
+    print("- - - Garmin Data - - -")
+    print(combine_dictionary_data(api))
 
 
 if __name__ == "__main__":
