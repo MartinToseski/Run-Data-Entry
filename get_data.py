@@ -216,12 +216,29 @@ def extract_since_last_activity_stats(api: Garmin):
     }
 
 
+def extract_location_stats(api: Garmin):
+    today = get_today_date()
+    thirty_days_ago = get_today_date() - timedelta(days=30)
+    last_four_weeks_activities = api.get_activities_by_date(thirty_days_ago.isoformat(), today.isoformat(), sortorder="desc")
+
+    locations_list = []
+    for run in last_four_weeks_activities:
+        run_details = api.get_activity_details(run["activityId"])
+        if "geoPolylineDTO" in run_details.keys() and run_details["geoPolylineDTO"] is not None:
+            #print(run_details["geoPolylineDTO"]["startPoint"]["lat"], run_details["geoPolylineDTO"]["startPoint"]["lon"])
+            loc = (run_details["geoPolylineDTO"]["startPoint"]["lat"], run_details["geoPolylineDTO"]["startPoint"]["lon"])
+            locations_list.append(loc)
+
+    return locations_list
+
+
 def main():
     """Main example demonstrating basic Garmin Connect API usage."""
     # Initialize API with authentication (will only prompt for credentials if needed)
     api = init_api()
 
     if not api:
+        print("Lost api")
         return
 
     """
@@ -232,6 +249,7 @@ def main():
     pass
     """
 
+    '''
     # Display daily statistics
     print("Daily Stats:")
     print(extract_daily_stats(api), "\n")
@@ -247,6 +265,10 @@ def main():
     # Display since last activity statistics
     print("Time Since Last Activities Stats:")
     print(extract_since_last_activity_stats(api))
+    '''
+
+    print("Last 4 Weeks Location Stats:")
+    print(extract_location_stats(api))
 
 
 if __name__ == "__main__":
