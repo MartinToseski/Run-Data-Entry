@@ -32,16 +32,17 @@ The provided example.py was used as a starting point to build upon.
 """
 
 import logging
-from asyncio.windows_events import NULL
 from datetime import date, timedelta, datetime
 from dateutil.relativedelta import relativedelta, MO
 from garminconnect import Garmin
 from example import init_api
+import geopandas as gpd
+from shapely.geometry import Point
 
 # Suppress garminconnect library logging to avoid tracebacks in normal operation
 logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
-
-days_of_the_week = {
+WORLD = gpd.read_file("data/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp")
+DAYS_OF_THE_WEEK = {
     0: "Monday",
     1: "Tuesday",
     2: "Wednesday",
@@ -53,32 +54,27 @@ days_of_the_week = {
 
 """ Helper function to get today's date """
 def get_today_date():
-    today_date = date.today()
-    return today_date
+    return date.today()
 
 
 """ Helper function to get last Monday's date before today's date """
 def get_last_monday():
-    last_monday_date = get_today_date() - relativedelta(weekday=MO(-1))
-    return last_monday_date
+    return get_today_date() - relativedelta(weekday=MO(-1))
 
 
 """ Helper function to get the name of the weekday from the date provided """
 def get_weekday_name(date_curr):
-    return days_of_the_week[date_curr.weekday()]
+    return DAYS_OF_THE_WEEK[date_curr.weekday()]
 
 
 """ Helper function to get a sum of some statistic in a list of runs """
 def get_total_run_statistic(run_activities, stat):
-    today = get_today_date().isoformat()
     return sum([run[stat] for run in run_activities])
 
 
 """ Helper function to get the date of Monday four weeks ago  """
 def get_monday_four_weeks_ago():
-    last_monday = get_last_monday()
-    monday_four_weeks_ago = last_monday - timedelta(days=28)
-    return monday_four_weeks_ago
+    return get_last_monday() - timedelta(days=28)
 
 
 """ Helper function to retain all run type activities from a list of activities """
@@ -90,10 +86,26 @@ def keep_only_runs(activity_list):
 effect -> aerobicTrainingEffect / anaerobicTrainingEffect
 """
 def calculate_weighted_training_effect(run_activities, effect):
-    today = get_today_date().isoformat()
     total_training_load = get_total_run_statistic(run_activities, "activityTrainingLoad")
     return sum([run[effect]*run["activityTrainingLoad"] for run in run_activities]) / total_training_load
 
+
+""" Helper function to extract country information from coordinates """
+def coordinates_to_country(coords):
+    country_list = []
+    for lat, lon in coords:
+        point = Point(lon, lat)
+        match = WORLD[WORLD.geometry.apply(lambda geom: point.within(geom))]
+        country_list.append(match.iloc[0]["ADMIN"])
+    return country_list
+
+
+""" Helper function to find whether a trip occured by looking at the log of country list """
+def find_trip(country_list):
+    unique_countries = set(country_list)
+    if len(unique_countries) == 1:
+        return False
+    return True
 
 
 """ Extract run-focused daily (morning) statistics 
@@ -218,18 +230,19 @@ def extract_since_last_activity_stats(api: Garmin):
 
 def extract_location_stats(api: Garmin):
     today = get_today_date()
-    thirty_days_ago = get_today_date() - timedelta(days=30)
-    last_four_weeks_activities = api.get_activities_by_date(thirty_days_ago.isoformat(), today.isoformat(), sortorder="desc")
+    last_monday = get_last_monday()
+    two_weeks_before = last_monday - timedelta(days=14)
+    last_four_weeks_activities = api.get_activities_by_date(two_weeks_before.isoformat(), today.isoformat(), sortorder="desc")
 
     locations_list = []
     for run in last_four_weeks_activities:
         run_details = api.get_activity_details(run["activityId"])
         if "geoPolylineDTO" in run_details.keys() and run_details["geoPolylineDTO"] is not None:
-            #print(run_details["geoPolylineDTO"]["startPoint"]["lat"], run_details["geoPolylineDTO"]["startPoint"]["lon"])
             loc = (run_details["geoPolylineDTO"]["startPoint"]["lat"], run_details["geoPolylineDTO"]["startPoint"]["lon"])
             locations_list.append(loc)
 
-    return locations_list
+    country_list = coordinates_to_country(locations_list)
+    return country_list, find_trip(locations_list)
 
 
 def main():
@@ -241,15 +254,6 @@ def main():
         print("Lost api")
         return
 
-    """
-    temp = api.get_activities_by_date(startdate=(get_today_date()-timedelta(days=16)).isoformat(), enddate=(get_today_date()-timedelta(days=16)).isoformat())
-    for run in temp:
-        print(run, "\n\n\n")
-
-    pass
-    """
-
-    '''
     # Display daily statistics
     print("Daily Stats:")
     print(extract_daily_stats(api), "\n")
@@ -264,8 +268,7 @@ def main():
 
     # Display since last activity statistics
     print("Time Since Last Activities Stats:")
-    print(extract_since_last_activity_stats(api))
-    '''
+    print(extract_since_last_activity_stats(api), "\n")
 
     print("Last 4 Weeks Location Stats:")
     print(extract_location_stats(api))
