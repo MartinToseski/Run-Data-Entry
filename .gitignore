@@ -3,4 +3,5 @@
 __pycache__/
 *.pyc
 your_data/
-demo.p
+code/demo.py
+code/example.py
