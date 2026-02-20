@@ -54,3 +54,45 @@ Current Scope: Garmin Extraction.
 ### 🌍 Location & Travel
 - Most recent detected country
 - Whether travel occurred within the last two weeks
+
+---
+
+### Weather Data Extraction
+The system now also integrates weather metrics from **Open-Meteo** for the user’s location, including:
+
+#### Hourly Data (optional per hour or median of day)
+- Apparent temperature  
+- Rain, showers, snowfall, snow depth  
+- Wind speed  
+- Weather code  
+
+#### Daily Data
+- Weather code  
+- Sunrise & sunset  
+- Daylight duration  
+- Temperature max, min, mean  
+- Apparent temperature mean  
+- Rain, showers, snowfall totals  
+- Precipitation hours  
+
+---
+
+## Project Structure
+code/
+├─ garmin/
+│ ├─ extract.py # Garmin extraction functions
+│ ├─ utils.py # Utility functions for dates, calculations
+│ ├─ example.py # Garmin API authentication
+│
+├─ weather/
+│ ├─ weather_main.py # Main entry point for weather extraction
+│ ├─ client.py # Open-Meteo client with caching & retry
+│ ├─ parsing.py # Parsing helpers for hourly/daily weather
+│ ├─ constants.py # Weather API constants
+│
+data/
+└─ ne_110m_admin_0_countries/ # Country shapefiles for Garmin location mapping
+
+## Credits
+- Garmin extraction built on top of: [python-garminconnect](https://github.com/cyberjunky/python-garminconnect/tree/master)  
+- Weather integration uses: [Open-Meteo Historical API](https://open-meteo.com/)
