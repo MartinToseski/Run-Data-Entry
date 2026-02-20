@@ -246,7 +246,8 @@ def extract_location_stats(api: Garmin) -> Dict[str, Any]:
 
     return {
         "location": countries[0],
-        "trip_in_the_last_two_weeks": find_trip(countries),
+        "location_coordinates": locations[0],
+        "trip_in_the_last_two_weeks": find_trip(countries)
     }
 
 

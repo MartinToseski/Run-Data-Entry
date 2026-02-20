@@ -2,6 +2,8 @@ import openmeteo_requests
 import pandas as pd
 import requests_cache
 from retry_requests import retry
+from code.garmin.extract import extract_today_run_stats, extract_location_stats
+from code.garmin.example import init_api
 
 
 # Setup the Open-Meteo API client with cache and retry on error
@@ -87,6 +89,13 @@ def get_daily_data(parameters, responses):
 
 
 def main():
+	garmin_api = init_api()
+	today_run_garmin_stats = extract_today_run_stats(garmin_api)
+	recent_garmin_location_stats = extract_location_stats(garmin_api)
+
+	coords = recent_garmin_location_stats["location_coordinates"]
+	print(coords)
+
 	params = {
 		"latitude": 54.9027,
 		"longitude": 23.9096,
