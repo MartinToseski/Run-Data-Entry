@@ -78,19 +78,19 @@ The system now also integrates weather metrics from **Open-Meteo** for the user�
 ---
 
 ## Project Structure
-code/
-├─ garmin/
-│ ├─ extract.py # Garmin extraction functions
-│ ├─ utils.py # Utility functions for dates, calculations
-│ ├─ example.py # Garmin API authentication
-│
-├─ weather/
-│ ├─ weather_main.py # Main entry point for weather extraction
-│ ├─ client.py # Open-Meteo client with caching & retry
-│ ├─ parsing.py # Parsing helpers for hourly/daily weather
-│ ├─ constants.py # Weather API constants
-│
-data/
+code/\
+├─ garmin/\
+│ ├─ extract.py # Garmin extraction functions\
+│ ├─ utils.py # Utility functions for dates, calculations\
+│ ├─ example.py # Garmin API authentication\
+│\
+├─ weather/\
+│ ├─ weather_main.py # Main entry point for weather extraction\
+│ ├─ client.py # Open-Meteo client with caching & retry\
+│ ├─ parsing.py # Parsing helpers for hourly/daily weather\
+│ ├─ constants.py # Weather API constants\
+│\
+data/\
 └─ ne_110m_admin_0_countries/ # Country shapefiles for Garmin location mapping
 
 ## Credits
