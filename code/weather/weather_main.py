@@ -44,5 +44,9 @@ hourly_data = {"date": pd.date_range(
 
 hourly_data["temperature_2m"] = hourly_temperature_2m
 
+print(hourly_temperature_2m[0])
+
 hourly_dataframe = pd.DataFrame(data = hourly_data)
-print("\nHourly data\n", hourly_dataframe)
+
+print("Temperature @ 12pm =", round(hourly_temperature_2m[12]))
+
