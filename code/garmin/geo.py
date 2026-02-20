@@ -4,7 +4,7 @@ Geospatial helper logic for country detection and trip inference.
 
 from typing import List, Tuple
 from shapely.geometry import Point
-from config import WORLD
+from .config import WORLD
 
 
 def coordinates_to_country(coords: List[tuple]) -> List[str]:

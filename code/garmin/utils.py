@@ -5,7 +5,7 @@ General utility helpers used across extraction modules.
 from datetime import date, timedelta
 from typing import List
 from dateutil.relativedelta import relativedelta, MO
-from config import DAYS_OF_THE_WEEK
+from .config import DAYS_OF_THE_WEEK
 
 
 def get_today_date() -> date:

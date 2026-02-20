@@ -2,8 +2,8 @@
 Entry point for Garmin data extraction.
 """
 
-from example import init_api
-from extract import combine_dictionary_data
+from .example import init_api
+from .extract import combine_dictionary_data
 
 
 def main() -> None:

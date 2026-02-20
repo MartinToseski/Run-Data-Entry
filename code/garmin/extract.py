@@ -9,8 +9,8 @@ and location information
 from datetime import timedelta, datetime
 from typing import Any, Dict
 from garminconnect import Garmin
-from utils import get_today_date, get_last_monday, get_monday_four_weeks_ago, get_weekday_name, get_total_run_statistic, keep_only_runs, calculate_weighted_training_effect
-from geo import coordinates_to_country, find_trip
+from .utils import get_today_date, get_last_monday, get_monday_four_weeks_ago, get_weekday_name, get_total_run_statistic, keep_only_runs, calculate_weighted_training_effect
+from .geo import coordinates_to_country, find_trip
 
 
 # ---------------------------------------------------------------------
