@@ -83,15 +83,14 @@ code/\
 │ ├─ extract.py # Garmin extraction functions\
 │ ├─ utils.py # Utility functions for dates, calculations\
 │ ├─ example.py # Garmin API authentication\
-│\
+│ ├─ data/\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ ne_110m_admin_0_countries/ # Country shapefiles for Garmin location mapping\
 ├─ weather/\
 │ ├─ weather_main.py # Main entry point for weather extraction\
 │ ├─ client.py # Open-Meteo client with caching & retry\
 │ ├─ parsing.py # Parsing helpers for hourly/daily weather\
 │ ├─ constants.py # Weather API constants\
-│\
-data/\
-└─ ne_110m_admin_0_countries/ # Country shapefiles for Garmin location mapping
+
 
 ## Credits
 - Garmin extraction built on top of: [python-garminconnect](https://github.com/cyberjunky/python-garminconnect/tree/master)  
