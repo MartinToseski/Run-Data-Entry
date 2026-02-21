@@ -7,3 +7,6 @@ code/demo.py
 code/pdm.lock
 code/pyproject.toml
 .cache.sqlite
+client_secret.txt
+credentials.json
+token.json
