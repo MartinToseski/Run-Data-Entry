@@ -6,3 +6,4 @@ your_data/
 code/demo.py
 code/pdm.lock
 code/pyproject.toml
+.cache.sqlite
