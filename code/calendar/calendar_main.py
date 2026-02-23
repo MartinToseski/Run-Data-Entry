@@ -12,7 +12,7 @@ from typing import Any, Dict, List
 from googleapiclient.errors import HttpError
 from .client import build_calendar_service
 from .constants import CLASS_CALENDAR_NAME, WORK_CALENDAR_NAME
-from .parsing import get_today_window, get_next_three_days_window, process_daily_events, is_deadline
+from .parsing import get_today_window, get_next_three_days_window, process_daily_events, is_deadline, get_gym_availability
 
 
 def get_calendar_id(service, calendar_name) -> str | None:
@@ -67,7 +67,8 @@ def extract_calendar_stats() -> Dict[str, Any]:
         "work_hours": work_stats["duration_sum"],
         "before_10am": classes_stats["morning_activity"] or work_stats["morning_activity"],
         "after_5pm": classes_stats["evening_activity"] or work_stats["evening_activity"],
-        "upcoming_deadline_next_three_days": len(upcoming_deadlines) > 0
+        "upcoming_deadline_next_three_days": len(upcoming_deadlines) > 0,
+        "gym_available": get_gym_availability()
     }
 
 

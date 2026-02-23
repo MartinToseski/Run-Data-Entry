@@ -22,5 +22,15 @@ DEADLINE_KEYWORDS = [
     "prepare"
 ]
 
+GYM_AVAILABLE = {
+    "Monday": True,
+    "Tuesday": True,
+    "Wednesday": True,
+    "Thursday": True,
+    "Friday": True,
+    "Saturday": False,
+    "Sunday": False,
+}
+
 CLASS_CALENDAR_NAME = "KTU Classes"
 WORK_CALENDAR_NAME = "Meetings / Activities"

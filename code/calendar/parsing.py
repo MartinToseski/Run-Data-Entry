@@ -5,7 +5,12 @@ Calendar data extraction and processing helpers.
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Tuple
 from dateutil import parser
-from .constants import DEADLINE_KEYWORDS
+from .constants import DEADLINE_KEYWORDS, GYM_AVAILABLE
+from code.garmin.utils import get_weekday_name, get_today_date
+
+
+def get_gym_availability():
+    return GYM_AVAILABLE[get_weekday_name(get_today_date())]
 
 
 def is_deadline(event: Dict[str, Any]) -> bool:
