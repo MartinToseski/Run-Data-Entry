@@ -45,17 +45,25 @@ def extract_daily_data(response):
     """
     daily = response.Daily()
 
+    def get_value(index, cast=float):
+        values = daily.Variables(index).ValuesAsNumpy()
+        if hasattr(values, "__len__"):
+            values = values[0]
+        if cast is not None:
+            values = cast(values)
+        return np.median(values).item()
+
     return {
-		"daily_weather_code": int(daily.Variables(0).ValuesAsNumpy()[0]),
-		"daily_sunrise": datetime.fromtimestamp(daily.Variables(1).ValuesInt64AsNumpy()[0]).strftime("%H:%M:%S"),
-		"daily_sunset": datetime.fromtimestamp(daily.Variables(2).ValuesInt64AsNumpy()[0]).strftime("%H:%M:%S"),
-		"daily_daylight_duration": int(daily.Variables(3).ValuesAsNumpy()[0] // 3600),
-		"daily_temperature_2m_max": round(daily.Variables(4).ValuesAsNumpy()[0]),
-		"daily_temperature_2m_min": round(daily.Variables(5).ValuesAsNumpy()[0]),
-		"daily_temperature_2m_mean": round(daily.Variables(6).ValuesAsNumpy()[0]),
-		"daily_apparent_temperature_mean": round(daily.Variables(7).ValuesAsNumpy()[0]),
-		"daily_rain_sum": round(daily.Variables(8).ValuesAsNumpy()[0], 1),
-		"daily_showers_sum": round(daily.Variables(9).ValuesAsNumpy()[0], 1),
-		"daily_snowfall_sum": round(daily.Variables(10).ValuesAsNumpy()[0], 1),
-		"daily_precipitation_hours": round(daily.Variables(11).ValuesAsNumpy()[0]),
+		"daily_weather_code": get_value(0, int),
+		"daily_sunrise": datetime.fromtimestamp(get_value(1, None)).strftime("%H:%M:%S"),
+		"daily_sunset": datetime.fromtimestamp(get_value(2, None)).strftime("%H:%M:%S"),
+		"daily_daylight_duration": get_value(3, int) // 3600,
+		"daily_temperature_2m_max": round(get_value(4)),
+		"daily_temperature_2m_min": round(get_value(5)),
+		"daily_temperature_2m_mean": round(get_value(6)),
+		"daily_apparent_temperature_mean": round(get_value(7)),
+		"daily_rain_sum": round(get_value(8), 1),
+		"daily_showers_sum": round(get_value(9), 1),
+		"daily_snowfall_sum": round(get_value(10), 1),
+		"daily_precipitation_hours": round(get_value(11))
 	}
