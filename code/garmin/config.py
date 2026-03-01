@@ -11,7 +11,7 @@ import geopandas as gpd
 logging.getLogger("garminconnect").setLevel(logging.CRITICAL)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SHAPEFILE_PATH = os.path.join(BASE_DIR, "data", "ne_110m_admin_0_countries", "ne_110m_admin_0_countries.shp")
+SHAPEFILE_PATH = os.path.join(BASE_DIR, "..", "..", "data", "ne_110m_admin_0_countries", "ne_110m_admin_0_countries.shp")
 
 
 # ---------------------------------------------------------------------

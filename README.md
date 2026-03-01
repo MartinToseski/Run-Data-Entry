@@ -18,6 +18,7 @@ Each module is independently responsible for extracting and structuring its resp
 # Current Capabilities
 
 ## 🟦 Garmin Data Extraction
+Provides structured running, recovery, and location metrics.
 
 ### 📅 Date & Time
 - Date  
@@ -102,20 +103,29 @@ Calendar data is used to quantify daily cognitive and time-load context.
 # Project Structure
 code/\
 ├─ garmin/\
-│ ├─ extract.py\
-│ ├─ utils.py\
-│ ├─ example.py\
-│ ├─ data/\
-│ │ └─ ne_110m_admin_0_countries/\
+│ ├─ extract.py &emsp;&emsp;&emsp;&emsp;# Garmin extraction functions\
+│ ├─ utils.py &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;# Utility functions for dates and calculations\  
+│ ├─ client.py &emsp;&emsp;&emsp;&emsp;&nbsp; # Garmin API authentication\
+│ ├─ data/ &emsp;&emsp;\
+│ │ └─ 
 │\
 ├─ weather/\
-│ ├─ weather_main.py\
-│ ├─ client.py\
-│ ├─ parsing.py\
-│ ├─ constants.py\
+│ ├─ weather_main.py &emsp;# Weather extraction entry point\
+│ ├─ client.py &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp; # Open-Meteo API client with caching & retry\
+│ ├─ parsing.py &emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp;# Parsing helpers for hourly/daily weather\
+│ ├─ constants.py &emsp;&emsp;&nbsp;&nbsp; # API constants\
 │\
 ├─ calendar/\
-│ ├─ calendar_main.py\
-│ ├─ client.py\
-│ ├─ parsing.py\
-│ ├─ constants.py
+│ ├─ calendar_main.py &nbsp; # Calendar extraction entry point\
+│ ├─ client.py &emsp;&emsp;&emsp;&emsp;&nbsp; # Google Calendar API client & authentication\
+│ ├─ parsing.py &emsp;&emsp;&emsp;&nbsp; # Parsing & processing helpers\
+│ ├─ constants.py &emsp;&emsp;&nbsp; # Calendar constants\
+│\
+├─ pipeline/\
+│ ├─ run_pipeline.py &emsp; # Runs the full data pipeline\
+│ ├─ aggregator.py &emsp;&nbsp;&nbsp; # Combines Garmin, Weather, Calendar data\
+│ ├─ schema.py &emsp;&emsp;&nbsp;&nbsp;&nbsp; # Final schema for CSV storage\
+│ ├─ storage.py &emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp; # Handles CSV persistence\
+data/\
+├─ running_dataset.csv &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; # Aggregated CSV dataset\
+├─ ne_110m_admin_0_countries &emsp; # Country shapefiles for location mapping\
