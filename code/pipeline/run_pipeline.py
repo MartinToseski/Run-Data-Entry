@@ -18,7 +18,7 @@ def main() -> None:
     """
     print("- - - Running Data Pipeline - - -")
     row = aggregate_all()
-    print(row)
+    #print(row)
     save_row(row)
     print("Pipeline completed successfully.")
 

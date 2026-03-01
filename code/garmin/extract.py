@@ -64,9 +64,9 @@ def extract_daily_stats(api: Garmin) -> Dict[str, Any]:
         "date": today,
         "day_of_the_week": get_weekday_name(get_today_date()),
         "training_status": training_status,
-        "last_night_HRV": hrv,
-        "last_night_sleep_score": sleep_score,
-        "last_night_RHR": rhr,
+        "last_night_HRV": int(round(hrv)),
+        "last_night_sleep_score": int(round(sleep_score)),
+        "last_night_RHR": int(round(rhr)),
         "total_week_km": total_week_km
     }
 

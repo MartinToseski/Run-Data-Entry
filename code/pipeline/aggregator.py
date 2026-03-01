@@ -17,11 +17,11 @@ from .schema import enforce_schema
 
 def aggregate_all():
     garmin_data = garmin_main()
-    print(garmin_data)
+    #print(garmin_data)
     weather_data = weather_main()
-    print(weather_data)
+    #print(weather_data)
     calendar_data = calendar_main()
-    print(calendar_data)
+    #print(calendar_data)
 
     combined = garmin_data | weather_data | calendar_data
     return enforce_schema(combined)

@@ -14,16 +14,6 @@ from .schema import FINAL_SCHEMA
 DATA_PATH = "data/running_dataset.csv"
 
 
-def normalize_types(row: dict) -> dict:
-    normalized = {}
-    for k, v in row.items():
-        if isinstance(v, np.generic):
-            normalized[k] = v.item()
-        else:
-            normalized[k] = v
-    return normalized
-
-
 def create_csv_if_missing() -> None:
     """
     Create empty CSV with header if not exists.
@@ -45,7 +35,6 @@ def save_row(row: Dict) -> None:
 
     df = df[df["date"] != row["date"]]
 
-    row = normalize_types(row)
     df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
     df = df.sort_values("date")
     df.to_csv(DATA_PATH, index=False)

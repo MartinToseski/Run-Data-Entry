@@ -8,23 +8,23 @@ from typing import Any, Dict
 
 
 def extract_hourly_data(response, hour: int | None) -> Dict[str, Any]:
-    """
-    Extract hourly weather metrics.
-    Args:
-        response (Any): Open-Meteo API response object
-        hour (Optional[int]): Hour to extract, if None returns median
-    Returns:
-        dict: Hourly weather metrics
-    """
-    hourly = response.Hourly()
+	"""
+	Extract hourly weather metrics.
+	Args:
+		response (Any): Open-Meteo API response object
+		hour (Optional[int]): Hour to extract, if None returns median
+	Returns:
+		dict: Hourly weather metrics
+	"""
+	hourly = response.Hourly()
 
-    def get_value(index, cast=float):
-        values = hourly.Variables(index).ValuesAsNumpy().astype(cast)
-        if hour is not None:
-            return values[hour].item()
-        return np.median(values).item()
+	def get_value(index, cast=float):
+		values = hourly.Variables(index).ValuesAsNumpy().astype(cast)
+		if hour is not None:
+			return values[hour].item()
+		return np.median(values).item()
 
-    return {
+	return {
 		"hourly_apparent_temperature": round(get_value(0)),
 		"hourly_rain_mm": round(get_value(1), 1),
 		"hourly_showers_mm": round(get_value(2), 1),
@@ -36,27 +36,27 @@ def extract_hourly_data(response, hour: int | None) -> Dict[str, Any]:
 
 
 def extract_daily_data(response):
-    """
-    Extract daily aggregated weather metrics.
-    Args:
-        response (Any): Open-Meteo API response object
-    Returns:
-        dict: Daily weather metrics
-    """
-    daily = response.Daily()
+	"""
+	Extract daily aggregated weather metrics.
+	Args:
+		response (Any): Open-Meteo API response object
+	Returns:
+		dict: Daily weather metrics
+	"""
+	daily = response.Daily()
 
-    def get_value(index, cast=float):
-        values = daily.Variables(index).ValuesAsNumpy()
-        if hasattr(values, "__len__"):
-            values = values[0]
-        if cast is not None:
-            values = cast(values)
-        return np.median(values).item()
+	def get_value(index, cast=float):
+		values = daily.Variables(index).ValuesAsNumpy()
+		if hasattr(values, "__len__"):
+			values = values[0]
+		if cast is not None:
+			values = cast(values)
+		return np.median(values).item()
 
-    return {
+	return {
 		"daily_weather_code": get_value(0, int),
-		"daily_sunrise": datetime.fromtimestamp(get_value(1, None)).strftime("%H:%M:%S"),
-		"daily_sunset": datetime.fromtimestamp(get_value(2, None)).strftime("%H:%M:%S"),
+		"daily_sunrise": datetime.fromtimestamp(daily.Variables(1).ValuesInt64AsNumpy()[0]).strftime("%H:%M:%S"),
+		"daily_sunset": datetime.fromtimestamp(daily.Variables(2).ValuesInt64AsNumpy()[0]).strftime("%H:%M:%S"),
 		"daily_daylight_duration": get_value(3, int) // 3600,
 		"daily_temperature_2m_max": round(get_value(4)),
 		"daily_temperature_2m_min": round(get_value(5)),
