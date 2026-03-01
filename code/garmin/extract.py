@@ -251,10 +251,10 @@ def extract_location_stats(api: Garmin) -> Dict[str, Any]:
     }
 
 
-def combine_dictionary_data(api: Garmin) -> Dict[str, Any]:
+def combine_garmin_data(api: Garmin) -> Dict[str, Any]:
     """
     Aggregate all extraction modules into a single unified dictionary.
     Serves as the primary interface for downstream persistence
     (e.g., CSV storage or database insertion).
-    """
+    """ 
     return extract_daily_stats(api) | extract_today_run_stats(api) | extract_last_four_weeks_stats(api) | extract_since_last_activity_stats(api) | extract_location_stats(api)

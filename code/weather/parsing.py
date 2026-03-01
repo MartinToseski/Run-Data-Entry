@@ -31,7 +31,7 @@ def extract_hourly_data(response, hour: int | None) -> Dict[str, Any]:
 		"hourly_snowfall_mm": round(get_value(3), 1),
 		"hourly_snow_depth_cm": round(get_value(4), 1),
 		"hourly_wind_speed_10m_kmh": round(get_value(5), 1),
-		"hourly_weather_code": int(get_value(6, int))
+		"hourly_weather_code": get_value(6, int)
 	}
 
 

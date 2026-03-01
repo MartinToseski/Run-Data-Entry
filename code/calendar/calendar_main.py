@@ -77,7 +77,7 @@ def main():
     Entry point for standalone execution.
     """
     try:
-        print(extract_calendar_stats())
+        return extract_calendar_stats()
     except HttpError as e:
         print(e)
 
@@ -86,6 +86,6 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("Exiting...")
+        print("Exiting Calendar...")
     except Exception as e:
-        print(e)
+        print("Calendar -", e)

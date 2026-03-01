@@ -3,27 +3,27 @@ Entry point for Garmin data extraction.
 """
 
 from .example import init_api
-from .extract import combine_dictionary_data
+from .extract import combine_garmin_data
 
 
-def main() -> None:
+def main():
     # Initialize API with authentication (will only prompt for credentials if needed)
     api = init_api()
 
     if not api:
-        print("Lost api")
+        print("Lost Garmin api")
         return
 
-    print("- - - Garmin Data - - -")
-    data = combine_dictionary_data(api)
-
-    print(data)
+    try:
+        return combine_garmin_data(api)
+    except Exception as e:
+        print("Garmin -", e)
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("Keyboard Interruption!")
+        print("Garmin - Keyboard Interruption!")
     except Exception as e:
-        print("Something bad happened!\n", e)
+        print("Garmin - Something bad happened!\n", e)
