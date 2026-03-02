@@ -19,7 +19,10 @@ DEADLINE_KEYWORDS = [
     "midterm",
     "final",
     "presentation",
-    "prepare"
+    "prepare",
+    "study",
+    "finish",
+    "complete"
 ]
 
 GYM_AVAILABLE = {

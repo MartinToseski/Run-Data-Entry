@@ -8,21 +8,23 @@ Fetches:
 - Upcoming deadlines within 3 days
 """
 
+from datetime import date
 from typing import Any, Dict, List
 from googleapiclient.errors import HttpError
 from .client import build_calendar_service
 from .constants import CLASS_CALENDAR_NAME, WORK_CALENDAR_NAME
 from .parsing import get_date_window, get_next_three_days_window, process_daily_events, is_deadline, get_gym_availability
+from code.garmin.utils import resolve_date
 
 
-def get_calendar_id(service, calendar_name) -> str | None:
+def get_calendar_id(service, calendar_name: str) -> str | None:
     """
     Retrieve calendar ID by calendar name.
     """
     calendars = service.calendarList().list().execute()
-    for calendar in calendars["items"]:
-        if calendar_name == calendar["summary"]:
-            return calendar["id"]
+    for calendar in calendars.get("items", []):
+        if calendar_name == calendar.get("summary", ""):
+            return calendar.get("id")
     return None
 
 
@@ -39,11 +41,13 @@ def get_events(service, calendar_id, start, end) -> List[Dict[str, Any]]:
     return events
 
 
-def extract_calendar_stats(target_date) -> Dict[str, Any]:
+def extract_calendar_stats(target_date: date) -> Dict[str, Any]:
     """
     Extract structured calendar metrics.
     """
     service = build_calendar_service()
+
+    target_date = resolve_date(target_date)
 
     class_calendar_id = get_calendar_id(service, CLASS_CALENDAR_NAME)
     work_calendar_id = get_calendar_id(service, WORK_CALENDAR_NAME)
@@ -72,14 +76,14 @@ def extract_calendar_stats(target_date) -> Dict[str, Any]:
     }
 
 
-def main(target_data):
+def main(target_data: date = None):
     """
     Entry point for standalone execution.
     """
     try:
         return extract_calendar_stats(target_data)
     except HttpError as e:
-        print(e)
+        print("Calendar API Error:", e)
 
 
 if __name__ == "__main__":
@@ -88,4 +92,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Exiting Calendar...")
     except Exception as e:
-        print("Calendar -", e)
+        print("Calendar Error:", e)

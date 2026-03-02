@@ -1,12 +1,13 @@
 """
 Entry point for Garmin data extraction.
 """
+from datetime import date
 
 from .client import init_api
 from .extract import combine_garmin_data
 
 
-def main(target_date):
+def main(target_date: date = None):
     # Initialize API with authentication (will only prompt for credentials if needed)
     api = init_api()
 

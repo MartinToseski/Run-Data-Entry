@@ -2,15 +2,19 @@
 Calendar data extraction and processing helpers.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Tuple
 from dateutil import parser
 from .constants import DEADLINE_KEYWORDS, GYM_AVAILABLE
-from code.garmin.utils import get_weekday_name, get_today_date
+from code.garmin.utils import get_weekday_name, resolve_date
 
 
-def get_gym_availability(target_date):
-    return GYM_AVAILABLE[get_weekday_name(target_date)]
+def get_gym_availability(target_date: date):
+    """
+    Return gym availability for target date.
+    Defaults to False if weekday not configured.
+    """
+    return GYM_AVAILABLE.get(get_weekday_name(target_date), False)
 
 
 def is_deadline(event: Dict[str, Any]) -> bool:
@@ -21,19 +25,21 @@ def is_deadline(event: Dict[str, Any]) -> bool:
     return any(keyword in summary for keyword in DEADLINE_KEYWORDS)
 
 
-def get_date_window(target_date) -> Tuple[str, str]:
+def get_date_window(target_date: date) -> Tuple[str, str]:
     """
     Return ISO timestamps for the target date's UTC window.
     """
+    target_date = resolve_date(target_date)
     start = datetime.combine(target_date, datetime.min.time(), tzinfo=timezone.utc)
     end = start + timedelta(days=1)
     return start.isoformat(), end.isoformat()
 
 
-def get_next_three_days_window(target_date) -> Tuple[str, str]:
+def get_next_three_days_window(target_date: date) -> Tuple[str, str]:
     """
     Return ISO timestamps for the next 3-day UTC window.
     """
+    target_date = resolve_date(target_date)
     start = datetime.combine(target_date, datetime.min.time(), tzinfo=timezone.utc)
     end = start + timedelta(days=3)
     return start.isoformat(), end.isoformat()
@@ -53,13 +59,13 @@ def process_daily_events(events: List[Dict[str, Any]]) -> Dict[str, Any]:
     after_5pm = False
 
     for event in events:
-        if "dateTime" not in event["start"]:
+        if "dateTime" not in event["start"] or "dateTime" not in event["end"]:
             continue
 
         start = parser.isoparse(event["start"]["dateTime"])
         end = parser.isoparse(event["end"]["dateTime"])
 
-        duration = round((end - start).total_seconds() / 3600.0, 1)
+        duration += (end - start).total_seconds() / 3600.0
 
         if start.hour < 10:
             before_10am = True
@@ -67,7 +73,7 @@ def process_daily_events(events: List[Dict[str, Any]]) -> Dict[str, Any]:
             after_5pm = True
 
     return {
-        "duration_sum": duration,
+        "duration_sum": round(duration, 1),
         "morning_activity": before_10am,
         "evening_activity": after_5pm
     }
