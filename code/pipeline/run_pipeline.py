@@ -22,7 +22,7 @@ def main(target_date) -> None:
     print(f"(for {target_date})")
     row = aggregate_all(target_date)
     print(row)
-    #save_row(row)
+    save_row(row)
     print("Pipeline completed successfully.")
 
 
