@@ -55,7 +55,7 @@ def extract_daily_stats(api: Garmin, target_date=None) -> Dict[str, Any]:
         rhr = None
 
     try:
-        week_activities = api.get_activities_by_date(last_monday_iso, date_iso)
+        week_activities = api.get_activities_by_date(last_monday_iso, (target_date-timedelta(days=1)).isoformat())
         week_runs = keep_only_runs(week_activities)
         total_week_km = round(sum(run.get("distance", 0) for run in week_runs) / 1000, 1)
     except Exception:
