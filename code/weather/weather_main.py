@@ -20,7 +20,7 @@ from .constants import URL, HOURLY_VARIABLES, DAILY_VARIABLES
 from .parsing import extract_hourly_data, extract_daily_data
 
 
-def extract_weather_data() -> Dict[str, Any]:
+def extract_weather_data(target_date) -> Dict[str, Any]:
 	"""
     Main entry point for weather extraction.
     
@@ -46,21 +46,20 @@ def extract_weather_data() -> Dict[str, Any]:
 	params = {
 		"latitude": coords[0],
 		"longitude": coords[1],
-		"start_date": get_today_date(),
-		"end_date": get_today_date(),
+		"start_date": target_date,
+		"end_date": target_date,
 		"hourly": HOURLY_VARIABLES,
 		"daily": DAILY_VARIABLES,
 		"timezone": "auto"
 	}
 
 	responses = client.weather_api(URL, params=params)
-
 	return extract_hourly_data(responses[0], run_start_hour) | extract_daily_data(responses[0])
 
 
-def main():
+def main(target_date):
 	try:
-		return extract_weather_data()
+		return extract_weather_data(target_date)
 	except Exception as e:
 		print(e)
 

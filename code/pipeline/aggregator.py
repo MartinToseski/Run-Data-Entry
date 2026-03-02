@@ -18,7 +18,7 @@ from .schema import enforce_schema
 def aggregate_all(target_date):
     garmin_data = garmin_main(target_date)
     #print(garmin_data)
-    weather_data = weather_main()
+    weather_data = weather_main(target_date)
     #print(weather_data)
     calendar_data = calendar_main()
     #print(calendar_data)
