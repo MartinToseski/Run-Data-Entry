@@ -14,7 +14,7 @@ It relies on:
 from typing import Dict, Any
 from code.garmin.utils import get_today_date
 from code.garmin.extract import extract_today_run_stats, extract_location_stats
-from code.garmin.example import init_api
+from code.garmin.client import init_api
 from .client import build_weather_client
 from .constants import URL, HOURLY_VARIABLES, DAILY_VARIABLES
 from .parsing import extract_hourly_data, extract_daily_data

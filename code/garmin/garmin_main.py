@@ -2,11 +2,11 @@
 Entry point for Garmin data extraction.
 """
 
-from .example import init_api
+from .client import init_api
 from .extract import combine_garmin_data
 
 
-def main():
+def main(target_date):
     # Initialize API with authentication (will only prompt for credentials if needed)
     api = init_api()
 
@@ -15,7 +15,7 @@ def main():
         return
 
     try:
-        return combine_garmin_data(api)
+        return combine_garmin_data(api, target_date)
     except Exception as e:
         print("Garmin -", e)
 

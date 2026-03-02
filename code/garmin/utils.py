@@ -3,7 +3,7 @@ General utility helpers used across extraction modules.
 """
 
 from datetime import date, timedelta
-from typing import List
+from typing import List, Optional
 from dateutil.relativedelta import relativedelta, MO
 from .config import DAYS_OF_THE_WEEK
 
@@ -16,23 +16,31 @@ def get_today_date() -> date:
     return date.today()
 
 
-def get_last_monday() -> date:
+def resolve_date(target_date: Optional[date] = None) -> date:
+    """
+    Resolve date parameter.
+    If None → return today.
+    """
+    return target_date or get_today_date()
+
+
+def get_last_monday(target_date: Optional[date] = None) -> date:
     """
     Return the date of the most recent Monday.
     Used to define weekly aggregation windows.
     """
-    return get_today_date() - relativedelta(weekday=MO(-1))
+    return resolve_date(target_date) - relativedelta(weekday=MO(-1))
 
 
-def get_monday_four_weeks_ago() -> date:
+def get_monday_four_weeks_ago(target_date: Optional[date] = None) -> date:
     """
     Return the Monday four weeks prior to the most recent Monday.
     Defines the rolling 4-week analysis window.
     """
-    return get_last_monday() - timedelta(days=28)
+    return get_last_monday(target_date) - timedelta(days=28)
 
 
-def get_weekday_name(date_curr) -> str:
+def get_weekday_name(date_curr: date) -> str:
     """
     Return the weekday name (e.g., 'Monday') for a given date.
     """
