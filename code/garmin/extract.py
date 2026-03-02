@@ -248,9 +248,40 @@ def extract_location_stats(api: Garmin, target_date=None) -> Dict[str, Any]:
 
     countries = coordinates_to_country(locations)
 
+    try:
+        date_activities = api.get_activities_by_date(target_date.isoformat(), target_date.isoformat(), sortorder="desc")
+    except Exception:
+        date_activities = []
+    date_runs = keep_only_runs(date_activities)
+
+    try:
+        details = api.get_activity_details(date_runs[0]["activityId"])
+        geo = details.get("geoPolylineDTO")
+        if not geo:
+            return {
+                "ran_outside": False,
+                "location": None,
+                "location_coordinates": None,
+                "trip_in_the_last_two_weeks": find_trip(countries)
+            }
+
+        lat = geo["startPoint"].get("lat")
+        lon = geo["startPoint"].get("lon")
+
+        if lat is None or lon is None:
+            return {
+                "ran_outside": False,
+                "location": None,
+                "location_coordinates": None,
+                "trip_in_the_last_two_weeks": find_trip(countries)
+            }
+    except Exception as e:
+        print("Extract location stats -", e)
+
     return {
-        "location": countries[0] if countries else None,
-        "location_coordinates": locations[0] if locations else None,
+        "ran_outside": True,
+        "location": countries[0],
+        "location_coordinates": locations[0],
         "trip_in_the_last_two_weeks": find_trip(countries)
     }
 

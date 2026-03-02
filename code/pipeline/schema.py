@@ -67,6 +67,7 @@ FINAL_SCHEMA: List[str] = [
     # =========================
     # Garmin — Location
     # =========================
+    "ran_outside",
     "location",
     "location_coordinates",
     "trip_in_the_last_two_weeks",

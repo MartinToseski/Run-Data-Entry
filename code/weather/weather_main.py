@@ -35,7 +35,29 @@ def extract_weather_data(target_date: date) -> Dict[str, Any]:
 	coords = garmin_location_stats.get("location_coordinates")
 
 	if not coords:
-		raise ValueError("No location coordinates found")
+		return {
+			key: None for key in (
+				"hourly_apparent_temperature",
+				"hourly_rain_mm",
+				"hourly_showers_mm",
+				"hourly_snowfall_mm",
+				"hourly_snow_depth_cm",
+				"hourly_wind_speed_10m_kmh",
+				"hourly_weather_code",
+				"daily_weather_code",
+				"daily_sunrise",
+				"daily_sunset",
+				"daily_daylight_duration",
+				"daily_temperature_2m_max",
+				"daily_temperature_2m_min",
+				"daily_temperature_2m_mean",
+				"daily_apparent_temperature_mean",
+				"daily_rain_sum",
+				"daily_showers_sum",
+				"daily_snowfall_sum",
+				"daily_precipitation_hours"
+			)
+		}
 
 	run_stats = extract_today_run_stats(garmin_api, target_date)
 	run_start_time = run_stats.get("run_today_start_time")
