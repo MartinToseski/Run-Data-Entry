@@ -1,27 +1,55 @@
 # 🏃 Run Data Entry – Personal Running Analytics System
 
 ## Overview
+This project is a modular, date-driven data ingestion pipeline for structured personal running analytics.
+It collects data from multiple sources, normalizes it into a strict schema, and appends it to a growing historical CSV dataset.
+
+The system is designed for:
+- Longitudinal performance tracking\
+- Behavioral analysis\
+- Context-aware training insights\
+- Future machine learning experimentation
+
+The pipeline supports historical backfilling and deterministic re-runs for any specific date.
 This project is a personal data ingestion system designed to collect and store structured running-related data from multiple sources.
 
-The goal is to build a growing historical dataset (stored as CSV) for experimentation, longitudinal analysis, and future machine learning projects.
-
-The system is structured as a modular data pipeline integrating:
-
+The system integrates:
 1. Garmin health and activity data  
 2. Weather data (Open-Meteo)  
 3. Google Calendar data  
 
 Each module is independently responsible for extracting and structuring its respective data.
 
+## 🧱 Architecture
+The system follows a layered structure:
+1. Source Extraction (Garmin, Weather, Calendar)
+2. Aggregation
+3. Schema Enforcement
+4. Storage (CSV append)
+
+Each source module is responsible only for:
+- Fetching
+- Structuring
+- Returning a flat dictionary
+
+The pipeline guarantees:
+- Deterministic outputs for a given date
+- Strict schema compliance
+- No silent column drift
 ---
 
-# Current Capabilities
+## 🚀 How to Run
+#### Run for a specific date:
+***python -m code.pipeline.run_pipeline 2026-03-01***
+#### If no date is provided:
+the pipeline defaults to today’s date
 
+# Current Capabilities
 ## 🟦 Garmin Data Extraction
 Provides structured running, recovery, and location metrics.
 
 ### 📅 Date & Time
-- Date  
+- Target date  
 - Day of the week  
 
 ### 🧠 Recovery & Readiness
@@ -30,11 +58,12 @@ Provides structured running, recovery, and location metrics.
 - Last Night Resting Heart Rate  
 - Last Night Sleep Score  
 
-### 🏃 Weekly Load
+### ⚖️ Weekly Load
 - Week cumulative kilometers run  
 
 ### 🏃 Today’s Run (if applicable)
 - Whether a run occurred today  
+- Whether the run was outdoors
 - Distance  
 - Duration  
 - Training load  
@@ -56,7 +85,7 @@ Provides structured running, recovery, and location metrics.
 - Anaerobic effect of last run  
 
 ### 🌍 Location & Travel
-- Most recent detected country  
+- Location coordinates (if available)
 - Whether travel occurred within the last two weeks  
 
 ---
@@ -99,12 +128,20 @@ Calendar data is used to quantify daily cognitive and time-load context.
   (Detected via keyword filtering in event summaries)
 
 ---
+## 🧬 Schema Enforcement
+All aggregated data passes through a strict schema layer:
+- Ensures consistent column ordering
+- Prevents accidental column drift
+- Fills missing fields deterministically
+- Guarantees compatibility with historical CSV data
 
-# Project Structure
+If a field is not defined in the schema, it will not be written to storage.
+
+## Project Structure
 code/\
 ├─ garmin/\
 │ ├─ extract.py &emsp;&emsp;&emsp;&emsp;# Garmin extraction functions\
-│ ├─ utils.py &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;# Utility functions for dates and calculations\  
+│ ├─ utils.py &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;# Utility functions for dates and calculations  
 │ ├─ client.py &emsp;&emsp;&emsp;&emsp;&nbsp; # Garmin API authentication\
 │ ├─ data/ &emsp;&emsp;\
 │ │ └─ 
@@ -128,4 +165,4 @@ code/\
 │ ├─ storage.py &emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp; # Handles CSV persistence\
 data/\
 ├─ running_dataset.csv &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; # Aggregated CSV dataset\
-├─ ne_110m_admin_0_countries &emsp; # Country shapefiles for location mapping\
+├─ ne_110m_admin_0_countries &emsp; # Country shapefiles for location mapping
