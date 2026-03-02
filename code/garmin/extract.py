@@ -91,7 +91,7 @@ def extract_today_run_stats(api: Garmin, target_date=None) -> Dict[str, Any]:
     date_iso = resolve_date(target_date).isoformat()
 
     try:
-        today_activities = api.get_activities_by_date(date_iso)
+        today_activities = api.get_activities_by_date(date_iso, date_iso)
     except Exception:
         today_activities = None
     today_runs = keep_only_runs(today_activities)
@@ -260,5 +260,6 @@ def combine_garmin_data(api: Garmin, target_date=None) -> Dict[str, Any]:
     Aggregate all extraction modules into a single unified dictionary.
     Serves as the primary interface for downstream persistence
     (e.g., CSV storage or database insertion).
-    """ 
+    """
+    target_date = resolve_date(target_date)
     return extract_daily_stats(api, target_date) | extract_today_run_stats(api, target_date) | extract_last_four_weeks_stats(api, target_date) | extract_since_last_activity_stats(api, target_date) | extract_location_stats(api, target_date)

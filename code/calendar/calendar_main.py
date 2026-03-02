@@ -12,7 +12,7 @@ from typing import Any, Dict, List
 from googleapiclient.errors import HttpError
 from .client import build_calendar_service
 from .constants import CLASS_CALENDAR_NAME, WORK_CALENDAR_NAME
-from .parsing import get_today_window, get_next_three_days_window, process_daily_events, is_deadline, get_gym_availability
+from .parsing import get_date_window, get_next_three_days_window, process_daily_events, is_deadline, get_gym_availability
 
 
 def get_calendar_id(service, calendar_name) -> str | None:
@@ -39,7 +39,7 @@ def get_events(service, calendar_id, start, end) -> List[Dict[str, Any]]:
     return events
 
 
-def extract_calendar_stats() -> Dict[str, Any]:
+def extract_calendar_stats(target_date) -> Dict[str, Any]:
     """
     Extract structured calendar metrics.
     """
@@ -51,14 +51,14 @@ def extract_calendar_stats() -> Dict[str, Any]:
     if not class_calendar_id or not work_calendar_id:
         raise ValueError("Required calendars not found.")
 
-    start, end = get_today_window()
+    start, end = get_date_window(target_date)
     classes_today = get_events(service, class_calendar_id, start, end)
     work_today = get_events(service, work_calendar_id, start, end)
 
     classes_stats = process_daily_events(classes_today)
     work_stats = process_daily_events(work_today)
 
-    deadlines_start, deadlines_end = get_next_three_days_window()
+    deadlines_start, deadlines_end = get_next_three_days_window(target_date)
     events_next_three_days = get_events(service, work_calendar_id, deadlines_start, deadlines_end)
     upcoming_deadlines = [event for event in events_next_three_days if is_deadline(event)]
 
@@ -68,16 +68,16 @@ def extract_calendar_stats() -> Dict[str, Any]:
         "before_10am": classes_stats["morning_activity"] or work_stats["morning_activity"],
         "after_5pm": classes_stats["evening_activity"] or work_stats["evening_activity"],
         "upcoming_deadline_next_three_days": len(upcoming_deadlines) > 0,
-        "gym_available": get_gym_availability()
+        "gym_available": get_gym_availability(target_date)
     }
 
 
-def main():
+def main(target_data):
     """
     Entry point for standalone execution.
     """
     try:
-        return extract_calendar_stats()
+        return extract_calendar_stats(target_data)
     except HttpError as e:
         print(e)
 

@@ -14,7 +14,7 @@ from .aggregator import aggregate_all
 from .storage import save_row
 
 
-def main(target_date) -> None:
+def main(target_date: date) -> None:
     """
     Execute full pipeline.
     """

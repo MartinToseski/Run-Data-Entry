@@ -31,13 +31,13 @@ def extract_weather_data(target_date) -> Dict[str, Any]:
     4. Extract hourly and daily metrics.
     """
 	garmin_api = init_api()
-	garmin_location_stats = extract_location_stats(garmin_api)
+	garmin_location_stats = extract_location_stats(garmin_api, target_date)
 	coords = garmin_location_stats.get("location_coordinates")
 
 	if not coords:
 		raise ValueError("No location coordinates found")
 
-	run_stats = extract_today_run_stats(garmin_api)
+	run_stats = extract_today_run_stats(garmin_api, target_date)
 	run_start_time = run_stats.get("run_today_start_time")
 	run_start_hour = int(run_start_time.split(":")[0]) if run_start_time else None
 
@@ -46,8 +46,8 @@ def extract_weather_data(target_date) -> Dict[str, Any]:
 	params = {
 		"latitude": coords[0],
 		"longitude": coords[1],
-		"start_date": target_date,
-		"end_date": target_date,
+		"start_date": target_date.isoformat(),
+		"end_date": target_date.isoformat(),
 		"hourly": HOURLY_VARIABLES,
 		"daily": DAILY_VARIABLES,
 		"timezone": "auto"

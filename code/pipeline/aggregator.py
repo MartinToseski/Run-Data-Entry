@@ -20,7 +20,7 @@ def aggregate_all(target_date):
     #print(garmin_data)
     weather_data = weather_main(target_date)
     #print(weather_data)
-    calendar_data = calendar_main()
+    calendar_data = calendar_main(target_date)
     #print(calendar_data)
 
     combined = garmin_data | weather_data | calendar_data
