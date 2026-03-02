@@ -15,7 +15,7 @@ from code.calendar.calendar_main import main as calendar_main
 from .schema import enforce_schema
 
 
-def aggregate_all():
+def aggregate_all(target_date):
     garmin_data = garmin_main()
     #print(garmin_data)
     weather_data = weather_main()

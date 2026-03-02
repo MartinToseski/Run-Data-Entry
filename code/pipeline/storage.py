@@ -5,7 +5,6 @@ Handles CSV persistence of dataset.
 """
 
 import os
-import numpy as np
 import pandas as pd
 from typing import Dict
 from .schema import FINAL_SCHEMA

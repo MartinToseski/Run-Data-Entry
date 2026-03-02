@@ -8,16 +8,19 @@ Executes:
 Intended to be run daily.
 """
 
+import sys
+from datetime import date, datetime
 from .aggregator import aggregate_all
 from .storage import save_row
 
 
-def main() -> None:
+def main(target_date) -> None:
     """
     Execute full pipeline.
     """
     print("- - - Running Data Pipeline - - -")
-    row = aggregate_all()
+    print(f"(for {target_date})")
+    row = aggregate_all(target_date)
     print(row)
     save_row(row)
     print("Pipeline completed successfully.")
@@ -25,7 +28,11 @@ def main() -> None:
 
 if __name__ == "__main__":
     try:
-        main()
+        if len(sys.argv) > 1:
+            input_date = datetime.strptime(sys.argv[1], "%Y-%m-%d").date()
+        else:
+            input_date = date.today()
+        main(input_date)
     except KeyboardInterrupt:
         print("Pipeline interrupted.")
     except Exception as e:
