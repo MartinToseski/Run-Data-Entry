@@ -277,6 +277,12 @@ def extract_location_stats(api: Garmin, target_date=None) -> Dict[str, Any]:
             }
     except Exception as e:
         print("Extract location stats -", e)
+        return {
+                "ran_outside": False,
+                "location": None,
+                "location_coordinates": None,
+                "trip_in_the_last_two_weeks": find_trip(countries)
+        }
 
     return {
         "ran_outside": True,
