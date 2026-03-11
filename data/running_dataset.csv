@@ -7,4 +7,6 @@ date,day_of_the_week,training_status,last_night_HRV,last_night_sleep_score,last_
 2026-03-06,Friday,PRODUCTIVE_3,49,77,51,16.8,True,6.9,44,53,2.5,0.0,09:31:26,27.8,80,55,50,2,14,2,3.8,4.0,False,,,True,,,,,,,,,,,,,,,,,,,,3.0,0.0,False,False,False,True
 2026-03-07,Saturday,PRODUCTIVE_3,55,91,48,23.7,True,14.0,89,67,2.8,0.0,08:54:09,27.8,80,55,50,1,1,3,2.5,0.0,False,,,True,,,,,,,,,,,,,,,,,,,,0.0,4.0,False,False,False,False
 2026-03-08,Sunday,PRODUCTIVE_3,56,92,47,37.7,False,0.0,0,0,0.0,0.0,,27.8,80,55,50,1,2,4,2.8,0.0,False,,,True,,,,,,,,,,,,,,,,,,,,0.0,0.0,False,False,True,False
-2026-03-09,Monday,MAINTAINING_2,60,76,49,0.0,True,8.85,58,54,2.6,0.0,09:14:34,30.6,81,56,50,2,3,5,2.8,0.0,False,,,True,,,,,,,,,,,,,,,,,,,,1.5,5.0,True,False,False,True
+2026-03-09,Monday,MAINTAINING_2,60,76,49,0.0,True,8.85,58,54,2.6,0.0,09:14:34,30.6,81,56,50,2,3,5,2.8,0.0,False,,,True,,,,,,,,,,,,,,,,,,,,1.5,5.0,True,False,True,True
+2026-03-10,Tuesday,MAINTAINING_2,61,95,47,8.8,False,0.0,0,0,0.0,0.0,,30.6,81,56,50,1,4,6,2.6,0.0,False,,,True,,,,,,,,,,,,,,,,,,,,4.5,0.0,False,False,True,True
+2026-03-11,Wednesday,PRODUCTIVE_3,64,87,47,8.8,True,9.65,62,303,3.8,4.0,09:24:22,30.6,81,56,50,2,5,7,2.6,0.0,True,Lithuania,"(54.902382334694266, 23.96038854494691)",True,1.0,0.0,0.0,0.0,0.0,9.4,0.0,2.0,06:49:02,18:19:14,11.0,14.0,3.0,7.0,5.0,0.0,0.0,0.0,0.0,0.0,1.2,False,False,False,True
