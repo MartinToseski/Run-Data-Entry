@@ -63,7 +63,7 @@ def extract_calendar_stats(target_date: date) -> Dict[str, Any]:
     work_stats = process_daily_events(work_today)
 
     deadlines_start, deadlines_end = get_next_three_days_window(target_date)
-    events_next_three_days = get_events(service, work_calendar_id, deadlines_start, deadlines_end)
+    events_next_three_days = get_events(service, work_calendar_id, deadlines_start, deadlines_end) + get_events(service, class_calendar_id, deadlines_start, deadlines_end)
     upcoming_deadlines = [event for event in events_next_three_days if is_deadline(event)]
 
     return {

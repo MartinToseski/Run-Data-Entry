@@ -22,7 +22,9 @@ DEADLINE_KEYWORDS = [
     "prepare",
     "study",
     "finish",
-    "complete"
+    "complete",
+    "defense",
+    "defence"
 ]
 
 GYM_AVAILABLE = {
