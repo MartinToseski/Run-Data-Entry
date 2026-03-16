@@ -10,3 +10,4 @@ code/pyproject.toml
 client_secret.txt
 credentials.json
 token.json
+data/running_dataset.csv
