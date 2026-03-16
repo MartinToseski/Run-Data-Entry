@@ -9,6 +9,8 @@ and location information
 from datetime import timedelta, datetime
 from typing import Any, Dict
 from garminconnect import Garmin
+from google.protobuf.proto import serialize_length_prefixed
+
 from .utils import resolve_date, get_last_monday, get_monday_four_weeks_ago, get_weekday_name, get_total_run_statistic, keep_only_runs, calculate_weighted_training_effect
 from .geo import coordinates_to_country, find_trip
 
@@ -65,9 +67,9 @@ def extract_daily_stats(api: Garmin, target_date=None) -> Dict[str, Any]:
         "date": date_iso,
         "day_of_the_week": get_weekday_name(target_date),
         "training_status": training_status,
-        "last_night_HRV": int(round(hrv)),
-        "last_night_sleep_score": int(round(sleep_score)),
-        "last_night_RHR": int(round(rhr)),
+        "last_night_HRV": int(round(hrv)) if hrv is not None else None,
+        "last_night_sleep_score": int(round(sleep_score)) if sleep_score is not None else None,
+        "last_night_RHR": int(round(rhr)) if rhr is not None else None,
         "total_week_km": total_week_km
     }
 
@@ -142,11 +144,39 @@ def extract_last_four_weeks_stats(api: Garmin, target_date=None) -> Dict[str, An
     except Exception:
         avg_km = 0
 
+    sleep_scores = [
+        (api.get_sleep_data((start_date + timedelta(days=i)).isoformat()) or {})
+        .get("dailySleepDTO", {})
+        .get("sleepScores", {})
+        .get("overall", {})
+        .get("value")
+        for i in range(28)
+    ]
+    sleep_scores = [val for val in sleep_scores if val is not None]
+
+    hrv_values = [
+        (api.get_hrv_data((start_date + timedelta(days=i)).isoformat()) or {})
+        .get("hrvSummary", {})
+        .get("lastNightAvg")
+        for i in range(28)
+    ]
+    hrv_values = [val for val in hrv_values if val is not None]
+
+    rhr_values = [
+        (api.get_rhr_day((start_date + timedelta(days=i)).isoformat()) or {})
+        .get("allMetrics", {})
+        .get("metricsMap", {})
+        .get("WELLNESS_RESTING_HEART_RATE", [{}])[0]
+        .get("value")
+        for i in range(28)
+    ]
+    rhr_values = [v for v in rhr_values if v is not None]
+
     return {
         "last_four_weeks_average_km": avg_km,
-        "last_four_weeks_average_sleep_score": round(sum(api.get_sleep_data((start_date+timedelta(days=i)).isoformat()).get("dailySleepDTO", {}).get("sleepScores", {}).get("overall", {}).get("value") for i in range(28)) / 28),
-        "last_four_weeks_average_HRV": round(sum(api.get_hrv_data((start_date+timedelta(days=i)).isoformat()).get("hrvSummary", {}).get("lastNightAvg", {}) for i in range(28)) / 28),
-        "last_four_weeks_average_RHR": round(sum(api.get_rhr_day((start_date+timedelta(days=i)).isoformat()).get("allMetrics", {}).get("metricsMap", {}).get("WELLNESS_RESTING_HEART_RATE", [{}])[0].get("value") for i in range(28)) / 28)
+        "last_four_weeks_average_sleep_score": round(sum(sleep_scores)/len(sleep_scores)) if sleep_scores else None,
+        "last_four_weeks_average_HRV": round(sum(hrv_values)/len(hrv_values)) if hrv_values else None,
+        "last_four_weeks_average_RHR": round(sum(rhr_values)/len(rhr_values)) if rhr_values else None
     }
 
 
@@ -253,6 +283,14 @@ def extract_location_stats(api: Garmin, target_date=None) -> Dict[str, Any]:
     except Exception:
         date_activities = []
     date_runs = keep_only_runs(date_activities)
+
+    if not date_runs:
+        return {
+            "ran_outside": False,
+            "location": None,
+            "location_coordinates": None,
+            "trip_in_the_last_two_weeks": find_trip(countries)
+        }
 
     try:
         details = api.get_activity_details(date_runs[0]["activityId"])
